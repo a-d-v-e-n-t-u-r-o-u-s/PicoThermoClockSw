@@ -1,1 +1,1 @@
-USED_DRIVERS +=
+USED_DRIVERS += gpio

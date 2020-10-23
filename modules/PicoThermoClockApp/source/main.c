@@ -21,6 +21,7 @@
  *
  */
 #include <stdint.h>
+#include "gpio.h"
 
 int main(void)
 {
