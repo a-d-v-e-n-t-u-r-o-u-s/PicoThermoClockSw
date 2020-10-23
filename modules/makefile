@@ -1,0 +1,11 @@
+include modules.mk
+
+.PHONY: all $(MAIN_MODULE) $(USED_MODULES)
+
+all: $(MAIN_MODULE)
+
+$(MAIN_MODULE) : $(USED_MODULES)
+	@$(MAKE) -C $@ $(MAKECMDGOALS)
+
+$(USED_MODULES):
+	@$(MAKE) -C $@ $(MAKECMDGOALS)

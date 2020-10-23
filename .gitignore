@@ -1,0 +1,10 @@
+/bin
+/docs
+/build*
+/.test*
+/documentation
+cscope.out
+config-user.mk
+.vim-bookmarks
+*.swp
+*.swo
