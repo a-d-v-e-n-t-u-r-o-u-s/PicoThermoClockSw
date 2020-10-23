@@ -1,3 +1,3 @@
-USED_MODULES +=
+USED_MODULES += Debug
 
 MAIN_MODULE = PicoThermoClockApp
