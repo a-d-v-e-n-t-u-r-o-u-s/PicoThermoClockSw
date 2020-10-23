@@ -1,3 +1,6 @@
 [submodule "drivers/gpio"]
 	path = drivers/gpio
 	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/gpio.git
+[submodule "drivers/usart"]
+	path = drivers/usart
+	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/usart.git

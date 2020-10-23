@@ -1,1 +1,2 @@
 USED_DRIVERS += gpio
+USED_DRIVERS += usart
