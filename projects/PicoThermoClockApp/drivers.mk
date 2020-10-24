@@ -1,2 +1,3 @@
 USED_DRIVERS += gpio
 USED_DRIVERS += usart
+USED_DRIVERS += 1wire

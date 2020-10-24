@@ -7,3 +7,6 @@
 [submodule "modules/Debug"]
 	path = modules/Debug
 	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/debug.git
+[submodule "drivers/1wire"]
+	path = drivers/1wire
+	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/1wire.git
