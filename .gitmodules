@@ -19,3 +19,6 @@
 [submodule "modules/SsdMgr"]
 	path = modules/SsdMgr
 	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/ssd_mgr.git
+[submodule "modules/1WireMgr"]
+	path = modules/1WireMgr
+	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/1wire_mgr.git
