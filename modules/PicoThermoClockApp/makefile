@@ -1,4 +1,5 @@
 SOURCE += main.c
+SOURCE += app.c
 
 SOURCE_DIR := source
 INCLUDE_DIR := include
