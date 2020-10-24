@@ -10,3 +10,6 @@
 [submodule "drivers/1wire"]
 	path = drivers/1wire
 	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/1wire.git
+[submodule "drivers/ds1302"]
+	path = drivers/ds1302
+	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/ds1302.git
