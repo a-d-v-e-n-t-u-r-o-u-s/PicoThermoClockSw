@@ -13,3 +13,6 @@
 [submodule "drivers/ds1302"]
 	path = drivers/ds1302
 	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/ds1302.git
+[submodule "modules/System"]
+	path = modules/System
+	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/system.git
