@@ -22,3 +22,6 @@
 [submodule "modules/1WireMgr"]
 	path = modules/1WireMgr
 	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/1wire_mgr.git
+[submodule "modules/InputMgr"]
+	path = modules/InputMgr
+	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/input_mgr.git
