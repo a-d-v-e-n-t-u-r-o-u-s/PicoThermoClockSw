@@ -74,6 +74,20 @@ static inline void drivers_init(void)
     }
 }
 
+static const INPUT_MGR_config_t input_mgr_config[2] =
+{
+    [0] =
+    {
+        .gpio_config = { INPUT_MINUS_PORT, INPUT_MINUS_PIN },
+        .callback = APP_minus_handler,
+    },
+    [1] =
+    {
+        .gpio_config = { INPUT_PLUS_PORT, INPUT_PLUS_PIN },
+        .callback = APP_plus_handler,
+    }
+};
+
 static inline void modules_init(void)
 {
     uint8_t displays[4][2] =
@@ -115,7 +129,7 @@ static inline void modules_init(void)
         DEBUG_output("WIRE MGR [fail]\n");
     }
 
-    if(INPUT_MGR_initialize() != 0)
+    if(INPUT_MGR_initialize(input_mgr_config, sizeof(input_mgr_config)/sizeof(input_mgr_config[0])) != 0)
     {
         DEBUG_output("INPUT MGR [fail]\n");
     }

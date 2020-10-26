@@ -22,4 +22,6 @@
  */
 #include <stdint.h>
 
+void APP_minus_handler(void);
+void APP_plus_handler(void);
 int8_t APP_initialize(void);

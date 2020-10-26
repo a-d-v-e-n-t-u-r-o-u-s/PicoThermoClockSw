@@ -117,6 +117,15 @@ static void app_main(void)
         old_counter = counter;
     }
 }
+void APP_minus_handler(void)
+{
+    DEBUG_output("Minus\n");
+}
+
+void APP_plus_handler(void)
+{
+    DEBUG_output("Plus\n");
+}
 
 int8_t APP_initialize(void)
 {
