@@ -33,6 +33,7 @@
 #include "ds1302.h"
 #include "app.h"
 #include "PCB0001.h"
+#include "input_mgr.h"
 
 static inline void drivers_init(void)
 {
@@ -112,6 +113,11 @@ static inline void modules_init(void)
     if(WIRE_MGR_initialize() != 0)
     {
         DEBUG_output("WIRE MGR [fail]\n");
+    }
+
+    if(INPUT_MGR_initialize() != 0)
+    {
+        DEBUG_output("INPUT MGR [fail]\n");
     }
 }
 
