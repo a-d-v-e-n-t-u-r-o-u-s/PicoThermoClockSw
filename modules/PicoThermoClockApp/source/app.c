@@ -30,12 +30,64 @@
 #include <util/delay.h>
 #include <stdbool.h>
 #include "PCB0001.h"
+#include "input_mgr.h"
+
+typedef enum
+{
+    IDLE,
+    SPLASH_SCREEN_ON,
+    SPLASH_SCREEN_WAIT,
+    SET_YEAR_SCREEN,
+    SET_MONTH_SCREEN,
+    SET_DAY_SCREEN,
+    SET_TIME_SCREEN,
+    TIME_SCREEN,
+} APP_state_t;
+
+typedef enum
+{
+    INVALID,
+    MINUS_RELEASE,
+    MINUS_LONG_PRESS,
+    PLUS_LONG_PRESS,
+    PLUS_RELEASE,
+    DOUBLE_PRESS,
+} APP_event_t;
+
+static bool is_minus_pressed;
+static bool is_minus_long_pressed;
+static bool is_plus_long_pressed;
+static bool is_plus_pressed;
 
 static uint32_t tick;
 static uint16_t counter;
 static uint16_t old_counter = UINT16_MAX;
-static uint8_t hours = 17;
-static uint8_t minutes = 48;
+
+static APP_state_t state;
+static APP_state_t old_state = SET_YEAR_SCREEN;
+static uint8_t minus_event = UINT8_MAX;
+static uint8_t plus_event = UINT8_MAX;
+static DS1302_datetime_t datetime =
+{
+    .year = 0u,
+    .month = 1u,
+    .date = 1u,
+    .weekday = 1u,
+    .hours = 12u,
+    .min = 0u,
+    .secs = 0u,
+    .format = 0u,
+};
+
+static inline is_short_press(uint8_t event)
+{
+    return (event == BUTTON_SHORT_PRESSED);
+}
+
+static inline is_release(uint8_t event)
+{
+    return (event == BUTTON_RELEASED);
+}
 
 static uint16_t get_converted_fraction(uint16_t value)
 {
@@ -64,15 +116,305 @@ static uint16_t get_converted_fraction(uint16_t value)
 
 static void callback(void)
 {
+    /*
+     *if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 5000)
+     *{
+     *    tick = SYSTEM_timer_get_tick();
+     *    counter++;
+     *}
+     */
+}
+
+static APP_state_t handle_splash_screen_on(void)
+{
+    GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
+    SSD_MGR_set(8888U);
+    tick = SYSTEM_timer_get_tick();
+    return SPLASH_SCREEN_WAIT;
+}
+
+static APP_state_t handle_splash_screen_wait(void)
+{
     if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 5000)
     {
-        tick = SYSTEM_timer_get_tick();
-        counter++;
+        return SET_YEAR_SCREEN;
+    }
+    else
+    {
+        return SPLASH_SCREEN_WAIT;
     }
 }
 
+static APP_state_t handle_set_year_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_YEAR_SCREEN;
+
+    switch(event)
+    {
+        case MINUS_LONG_PRESS:
+        case MINUS_RELEASE:
+            if(datetime.year == 0U)
+            {
+                datetime.year = 99U;
+            }
+            else
+            {
+                datetime.year--;
+            }
+            break;
+        case PLUS_LONG_PRESS:
+        case PLUS_RELEASE:
+            datetime.year++;
+            datetime.year %=100u;
+            break;
+        case DOUBLE_PRESS:
+            ret = SET_MONTH_SCREEN;
+            break;
+        case INVALID:
+        default:
+            break;
+    }
+
+    SSD_MGR_set(datetime.year + 2000u);
+    return ret;
+}
+
+static APP_state_t handle_set_month_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_MONTH_SCREEN;
+
+    switch(event)
+    {
+        case MINUS_LONG_PRESS:
+        case MINUS_RELEASE:
+            if(datetime.month == 1)
+            {
+                datetime.month = 12u;
+            }
+            else
+            {
+                datetime.month--;
+            }
+            break;
+        case PLUS_LONG_PRESS:
+        case PLUS_RELEASE:
+            if(datetime.month == 12)
+            {
+                datetime.month = 1;
+            }
+            else
+            {
+                datetime.month++;
+            }
+            break;
+        case DOUBLE_PRESS:
+            ret = SET_DAY_SCREEN;
+            break;
+        case INVALID:
+        default:
+            break;
+    }
+
+    SSD_MGR_set(datetime.month);
+    return ret;
+}
+
+static APP_state_t handle_set_day_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_DAY_SCREEN;
+
+    switch(event)
+    {
+        case MINUS_LONG_PRESS:
+        case MINUS_RELEASE:
+            if(datetime.date == 1)
+            {
+                datetime.date = 30u;
+            }
+            else
+            {
+                datetime.date--;
+            }
+            break;
+        case PLUS_LONG_PRESS:
+        case PLUS_RELEASE:
+            if(datetime.date == 30)
+            {
+                datetime.date = 1;
+            }
+            else
+            {
+                datetime.date++;
+            }
+            break;
+        case DOUBLE_PRESS:
+            ret = SET_TIME_SCREEN;
+            break;
+        case INVALID:
+        default:
+            break;
+    }
+
+    SSD_MGR_set(datetime.date);
+    return ret;
+}
+
+static APP_state_t handle_set_time_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_TIME_SCREEN;
+
+    switch(event)
+    {
+        case MINUS_LONG_PRESS:
+        case MINUS_RELEASE:
+            datetime.hours++;
+            datetime.hours %= 24u;
+            break;
+        case PLUS_LONG_PRESS:
+        case PLUS_RELEASE:
+            datetime.min++;
+            datetime.min %= 60u;
+            break;
+        case DOUBLE_PRESS:
+            ret = TIME_SCREEN;
+            break;
+        case INVALID:
+        default:
+            break;
+    }
+
+    datetime.secs = 0u;
+
+    uint16_t const to_display = datetime.hours*100U + datetime.min;
+
+    DS1302_set_write_protection(false);
+    DS1302_set(&datetime);
+    SSD_MGR_set(to_display);
+    tick = SYSTEM_timer_get_tick();
+    return ret;
+}
+
+static APP_state_t handle_time_screen(void)
+{
+    if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 1000)
+    {
+        uint8_t ss = DS1302_get_seconds();
+        uint8_t mm = DS1302_get_minutes();
+        uint8_t hh = DS1302_get_hours();
+
+        DEBUG_output("%d:%d:%d\n",hh, mm, ss);
+        SSD_MGR_set(hh*100 + mm);
+        tick = SYSTEM_timer_get_tick();
+    }
+
+    return TIME_SCREEN;
+}
+
+
 static void app_main(void)
 {
+    if(old_state != state)
+    {
+        DEBUG_output("Old [%d] -> New [%d]\n", old_state, state);
+        old_state = state;
+    }
+
+    INPUT_MGR_event_t event;
+    APP_event_t app_event = INVALID;
+
+    if(INPUT_MGR_get_event(&event) == 0)
+    {
+        switch(event.event)
+        {
+            case BUTTON_SHORT_PRESSED:
+                if(event.id == INPUT_MINUS_ID)
+                {
+                    is_minus_pressed = true;
+
+                    if(is_plus_pressed)
+                    {
+                        app_event = DOUBLE_PRESS;
+                    }
+                }
+                else
+                {
+                    is_plus_pressed = true;
+                    if(is_minus_pressed)
+                    {
+                        app_event = DOUBLE_PRESS;
+                    }
+                }
+                break;
+            case BUTTON_LONG_PRESSED:
+                if(event.id == INPUT_MINUS_ID)
+                {
+                    is_minus_long_pressed = true;
+                }
+
+                if(event.id == INPUT_PLUS_ID)
+                {
+                    is_plus_long_pressed = true;
+                }
+
+                is_minus_pressed = false;
+                is_plus_pressed = false;
+                break;
+            case BUTTON_RELEASED:
+                if(event.id == INPUT_MINUS_ID)
+                {
+                    app_event = MINUS_RELEASE;
+                    is_minus_pressed = false;
+                    is_minus_long_pressed = false;
+                }
+                else
+                {
+                    app_event = PLUS_RELEASE;
+                    is_plus_pressed = false;
+                    is_plus_long_pressed = false;
+                }
+                break;
+        }
+    }
+
+    if(is_minus_long_pressed)
+    {
+        app_event = MINUS_LONG_PRESS;
+    }
+
+    if(is_plus_long_pressed)
+    {
+        app_event = PLUS_LONG_PRESS;
+    }
+
+    switch(state)
+    {
+        case IDLE:
+            state = SPLASH_SCREEN_ON;
+            break;
+        case SPLASH_SCREEN_ON:
+            state = handle_splash_screen_on();
+            break;
+        case SPLASH_SCREEN_WAIT:
+            state = handle_splash_screen_wait();
+            break;
+        case SET_YEAR_SCREEN:
+            state = handle_set_year_screen(app_event);
+            break;
+        case SET_MONTH_SCREEN:
+            state = handle_set_month_screen(app_event);
+            break;
+        case SET_DAY_SCREEN:
+            state = handle_set_day_screen(app_event);
+            break;
+        case SET_TIME_SCREEN:
+            state = handle_set_time_screen(app_event);
+            break;
+        case TIME_SCREEN:
+            state = handle_time_screen();
+            break;
+    }
+
+#if 0
     static bool flag;
 
     if(false)
@@ -116,35 +458,16 @@ static void app_main(void)
     {
         old_counter = counter;
     }
-}
-void APP_minus_handler(void)
-{
-    DEBUG_output("Minus\n");
-}
-
-void APP_plus_handler(void)
-{
-    DEBUG_output("Plus\n");
+#endif
 }
 
 int8_t APP_initialize(void)
 {
-    if(SYSTEM_register_task(app_main, 10000u) != 0)
+    if(SYSTEM_register_task(app_main, 100u) != 0)
     {
         return -1;
     }
 
     SYSTEM_timer_register(callback);
-
-    DS1302_datetime_t config =
-    {
-        .secs = 0,
-        .min = 0,
-        .hours = 0,
-    };
-
-    DS1302_set_write_protection(false);
-    DS1302_set(&config);
-
     return 0;
 }

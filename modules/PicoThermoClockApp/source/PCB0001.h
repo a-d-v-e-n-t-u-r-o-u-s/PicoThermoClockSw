@@ -69,8 +69,10 @@
 #define RTC_CE_PORT             (GPIO_PORTD)
 #define RTC_CE_PIN              (7U)
 
+#define INPUT_MINUS_ID          (0U)
 #define INPUT_MINUS_PORT        (GPIO_PORTD)
 #define INPUT_MINUS_PIN         (3U)
+#define INPUT_PLUS_ID           (1U)
 #define INPUT_PLUS_PORT         (GPIO_PORTD)
 #define INPUT_PLUS_PIN          (2U)
 /*@{*/

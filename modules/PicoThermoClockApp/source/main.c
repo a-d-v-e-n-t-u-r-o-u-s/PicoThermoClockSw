@@ -78,13 +78,13 @@ static const INPUT_MGR_config_t input_mgr_config[2] =
 {
     [0] =
     {
+        .id = INPUT_MINUS_ID,
         .gpio_config = { INPUT_MINUS_PORT, INPUT_MINUS_PIN },
-        .callback = APP_minus_handler,
     },
     [1] =
     {
+        .id = INPUT_PLUS_ID,
         .gpio_config = { INPUT_PLUS_PORT, INPUT_PLUS_PIN },
-        .callback = APP_plus_handler,
     }
 };
 
@@ -141,7 +141,11 @@ int main(void)
     modules_init();
 
     SYSTEM_init();
-    APP_initialize();
+
+    if(APP_initialize() != 0)
+    {
+        DEBUG_output("APP [fail]\n");
+    }
 
     DEBUG_output("********************************\n");
     DEBUG_output("******* Mini Thermometer *******\n");
