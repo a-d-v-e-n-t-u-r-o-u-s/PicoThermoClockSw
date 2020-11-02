@@ -54,39 +54,34 @@ typedef enum
     DOUBLE_PRESS,
 } APP_event_t;
 
-static bool is_minus_pressed;
-static bool is_minus_long_pressed;
-static bool is_plus_long_pressed;
-static bool is_plus_pressed;
-
 static uint32_t tick;
 static uint16_t counter;
-static uint16_t old_counter = UINT16_MAX;
+static uint16_t old_counter;
 
 static APP_state_t state;
-static APP_state_t old_state = SET_YEAR_SCREEN;
-static uint8_t minus_event = UINT8_MAX;
-static uint8_t plus_event = UINT8_MAX;
-static DS1302_datetime_t datetime =
-{
-    .year = 0u,
-    .month = 1u,
-    .date = 1u,
-    .weekday = 1u,
-    .hours = 12u,
-    .min = 0u,
-    .secs = 0u,
-    .format = 0u,
-};
+static APP_state_t old_state;
+static INPUT_MGR_event_t new_input;
+static INPUT_MGR_event_t old_input;
+static bool is_colon_active;
 
-static inline is_short_press(uint8_t event)
+static DS1302_datetime_t datetime;
+
+static void set_input_to_defaults(INPUT_MGR_event_t *event)
 {
-    return (event == BUTTON_SHORT_PRESSED);
+    event->id = UINT8_MAX;
+    event->event = UINT8_MAX;
 }
 
-static inline is_release(uint8_t event)
+static void set_datetime_to_defaults(DS1302_datetime_t *data)
 {
-    return (event == BUTTON_RELEASED);
+    data->year = 0u;
+    data->month = 12u;
+    data->date = 1u;
+    data->weekday = 7u;
+    data->hours = 12u;
+    data->min = 0u;
+    data->secs = 0u;
+    data->format = 0u;
 }
 
 static uint16_t get_converted_fraction(uint16_t value)
@@ -116,17 +111,85 @@ static uint16_t get_converted_fraction(uint16_t value)
 
 static void callback(void)
 {
-    /*
-     *if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 5000)
-     *{
-     *    tick = SYSTEM_timer_get_tick();
-     *    counter++;
-     *}
-     */
+    static uint32_t colon_tick;
+    static bool is_colon;
+
+    if(is_colon_active)
+    {
+        if(SYSTEM_timer_tick_difference(colon_tick, SYSTEM_timer_get_tick()) > 1000)
+        {
+            colon_tick = SYSTEM_timer_get_tick();
+            if(is_colon)
+            {
+                GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
+                is_colon = false;
+            }
+            else
+            {
+                GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
+                is_colon = true;
+            }
+        }
+    }
+}
+
+
+APP_event_t get_app_event(void)
+{
+    APP_event_t ret = INVALID;
+
+    if(INPUT_MGR_get_event(&new_input) == 0)
+    {
+        DEBUG_output("Ev: [%d] \n",new_input.event);
+
+        if(old_input.event == BUTTON_SHORT_PRESSED &&
+                new_input.event == BUTTON_SHORT_PRESSED)
+        {
+            set_input_to_defaults(&new_input);
+            ret = DOUBLE_PRESS;
+        }
+        else if(old_input.id == INPUT_MINUS_ID &&
+                old_input.event == BUTTON_SHORT_PRESSED &&
+                new_input.id == INPUT_MINUS_ID &&
+                new_input.event == BUTTON_RELEASED)
+        {
+            ret = MINUS_RELEASE;
+        }
+        else if(old_input.id == INPUT_PLUS_ID &&
+                old_input.event == BUTTON_SHORT_PRESSED &&
+                new_input.id == INPUT_PLUS_ID &&
+                new_input.event == BUTTON_RELEASED)
+        {
+            ret = PLUS_RELEASE;
+        }
+
+
+        old_input = new_input;
+    }
+
+    if(new_input.id == INPUT_MINUS_ID &&
+            new_input.event == BUTTON_LONG_PRESSED)
+    {
+        ret = MINUS_LONG_PRESS;
+    }
+
+    if(new_input.id == INPUT_PLUS_ID &&
+            new_input.event == BUTTON_LONG_PRESSED)
+    {
+        ret = PLUS_LONG_PRESS;
+    }
+
+    return ret;
 }
 
 static APP_state_t handle_splash_screen_on(void)
 {
+    datetime.year = 0U;
+    datetime.month = 12u;
+    datetime.date = 30u;
+    datetime.weekday = 7u;
+    datetime.hours = 12u;
+    datetime.min = 0u;
     GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
     SSD_MGR_set(8888U);
     tick = SYSTEM_timer_get_tick();
@@ -137,6 +200,7 @@ static APP_state_t handle_splash_screen_wait(void)
 {
     if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 5000)
     {
+        GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
         return SET_YEAR_SCREEN;
     }
     else
@@ -291,6 +355,7 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
     DS1302_set(&datetime);
     SSD_MGR_set(to_display);
     tick = SYSTEM_timer_get_tick();
+    is_colon_active = true;
     return ret;
 }
 
@@ -319,72 +384,7 @@ static void app_main(void)
         old_state = state;
     }
 
-    INPUT_MGR_event_t event;
-    APP_event_t app_event = INVALID;
-
-    if(INPUT_MGR_get_event(&event) == 0)
-    {
-        switch(event.event)
-        {
-            case BUTTON_SHORT_PRESSED:
-                if(event.id == INPUT_MINUS_ID)
-                {
-                    is_minus_pressed = true;
-
-                    if(is_plus_pressed)
-                    {
-                        app_event = DOUBLE_PRESS;
-                    }
-                }
-                else
-                {
-                    is_plus_pressed = true;
-                    if(is_minus_pressed)
-                    {
-                        app_event = DOUBLE_PRESS;
-                    }
-                }
-                break;
-            case BUTTON_LONG_PRESSED:
-                if(event.id == INPUT_MINUS_ID)
-                {
-                    is_minus_long_pressed = true;
-                }
-
-                if(event.id == INPUT_PLUS_ID)
-                {
-                    is_plus_long_pressed = true;
-                }
-
-                is_minus_pressed = false;
-                is_plus_pressed = false;
-                break;
-            case BUTTON_RELEASED:
-                if(event.id == INPUT_MINUS_ID)
-                {
-                    app_event = MINUS_RELEASE;
-                    is_minus_pressed = false;
-                    is_minus_long_pressed = false;
-                }
-                else
-                {
-                    app_event = PLUS_RELEASE;
-                    is_plus_pressed = false;
-                    is_plus_long_pressed = false;
-                }
-                break;
-        }
-    }
-
-    if(is_minus_long_pressed)
-    {
-        app_event = MINUS_LONG_PRESS;
-    }
-
-    if(is_plus_long_pressed)
-    {
-        app_event = PLUS_LONG_PRESS;
-    }
+    APP_event_t app_event = get_app_event();
 
     switch(state)
     {
@@ -469,5 +469,9 @@ int8_t APP_initialize(void)
     }
 
     SYSTEM_timer_register(callback);
+    set_input_to_defaults(&old_input);
+    set_datetime_to_defaults(&datetime);
+    old_state = SET_YEAR_SCREEN;
+    old_counter = UINT16_MAX;
     return 0;
 }
