@@ -42,6 +42,7 @@ typedef enum
     SET_DAY_SCREEN,
     SET_TIME_SCREEN,
     TIME_SCREEN,
+    TEMP_SCREEN,
 } APP_state_t;
 
 typedef enum
@@ -55,8 +56,6 @@ typedef enum
 } APP_event_t;
 
 static uint32_t tick;
-static uint16_t counter;
-static uint16_t old_counter;
 
 static APP_state_t state;
 static APP_state_t old_state;
@@ -359,6 +358,8 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
     return ret;
 }
 
+static uint8_t timer5s;
+
 static APP_state_t handle_time_screen(void)
 {
     if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 1000)
@@ -370,9 +371,49 @@ static APP_state_t handle_time_screen(void)
         DEBUG_output("%d:%d:%d\n",hh, mm, ss);
         SSD_MGR_set(hh*100 + mm);
         tick = SYSTEM_timer_get_tick();
+        timer5s++;
     }
 
-    return TIME_SCREEN;
+    if(timer5s > 5U)
+    {
+        timer5s = 0u;
+        tick = SYSTEM_timer_get_tick();
+        is_colon_active = false;
+        GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
+        return TEMP_SCREEN;
+    }
+    else
+    {
+        return TIME_SCREEN;
+    }
+}
+
+static APP_state_t handle_temp_screen(void)
+{
+    if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 1000)
+    {
+        uint16_t temperature = WIRE_MGR_get_temperature();
+        uint16_t fraction = get_converted_fraction(temperature % 16);
+        uint16_t integer = (temperature / 16);
+        uint16_t display = integer * 100;
+        display += fraction;
+        DEBUG_output("Temp %d,%d \n", integer, fraction);
+        SSD_MGR_set(display);
+        tick = SYSTEM_timer_get_tick();
+        timer5s++;
+    }
+
+    if(timer5s > 5U)
+    {
+        timer5s = 0;
+        tick = SYSTEM_timer_get_tick();
+        is_colon_active = true;
+        return TIME_SCREEN;
+    }
+    else
+    {
+        return TEMP_SCREEN;
+    }
 }
 
 
@@ -412,53 +453,10 @@ static void app_main(void)
         case TIME_SCREEN:
             state = handle_time_screen();
             break;
+        case TEMP_SCREEN:
+            state = handle_temp_screen();
+            break;
     }
-
-#if 0
-    static bool flag;
-
-    if(false)
-    {
-        /*
-         *hours += (counter/3600u) % 24u;
-         *minutes += (counter/60u) % 60u;
-         *SSD_MGR_set(hours*100 + minutes);
-         *flag = true;
-         */
-        uint8_t ss = DS1302_get_seconds();
-        uint8_t mm = DS1302_get_minutes();
-        uint8_t hh = DS1302_get_hours();
-
-        DEBUG_output("%d:%d:%d\n",hh, mm, ss);
-        SSD_MGR_set(mm*100 + ss);
-
-        if(flag)
-        {
-            GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
-        }
-        else
-        {
-            GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
-        }
-    }
-    else
-    {
-        uint16_t temperature = WIRE_MGR_get_temperature();
-        uint16_t fraction = get_converted_fraction(temperature % 16);
-        uint16_t integer = (temperature / 16);
-        uint16_t display = integer * 100;
-        display += fraction;
-        DEBUG_output("Temp %d,%d \n", integer, fraction);
-        SSD_MGR_set(display);
-    }
-
-    flag = !flag;
-
-    if(old_counter != counter)
-    {
-        old_counter = counter;
-    }
-#endif
 }
 
 int8_t APP_initialize(void)
@@ -472,6 +470,5 @@ int8_t APP_initialize(void)
     set_input_to_defaults(&old_input);
     set_datetime_to_defaults(&datetime);
     old_state = SET_YEAR_SCREEN;
-    old_counter = UINT16_MAX;
     return 0;
 }
