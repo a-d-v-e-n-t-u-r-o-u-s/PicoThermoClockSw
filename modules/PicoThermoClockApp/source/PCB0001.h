@@ -56,8 +56,6 @@
 #define SEGMENTF_PIN            (4U)
 #define SEGMENTG_PORT           (GPIO_PORTB)
 #define SEGMENTG_PIN            (5U)
-#define SEGMENTDP_PORT          (GPIO_PORTB)
-#define SEGMENTDP_PIN           (0U)
 
 #define COLON_PORT              (GPIO_PORTB)
 #define COLON_PIN               (0U)
