@@ -162,11 +162,11 @@ static void set_to_display(uint16_t value)
 static void set_temp_to_display(uint8_t temp)
 {
     SSD_MGR_display_set(&app_displays[0], SSD_CHAR_C);
+    SSD_MGR_display_set(&app_displays[1], SSD_CHAR_DEGREE);
     uint8_t digit = get_digit(temp, 0);
-    SSD_MGR_display_set(&app_displays[1], digit);
-    digit = get_digit(temp, 1);
     SSD_MGR_display_set(&app_displays[2], digit);
-    SSD_MGR_display_set(&app_displays[3], SSD_BLANK);
+    digit = get_digit(temp, 1);
+    SSD_MGR_display_set(&app_displays[3], digit);
 }
 
 APP_event_t get_app_event(void)
