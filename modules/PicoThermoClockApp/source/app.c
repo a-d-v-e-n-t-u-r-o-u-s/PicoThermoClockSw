@@ -55,7 +55,6 @@ typedef enum
 } APP_event_t;
 
 static uint32_t tick;
-
 static APP_state_t state;
 static APP_state_t old_state;
 static INPUT_MGR_event_t new_input;
@@ -63,7 +62,7 @@ static INPUT_MGR_event_t old_input;
 static bool is_colon_active;
 static SSD_MGR_displays_t *app_displays;
 static uint8_t app_displays_size;
-
+static uint8_t timer5s;
 static DS1302_datetime_t datetime;
 
 static uint8_t get_digit(uint16_t value, uint8_t position)
@@ -394,7 +393,6 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
     return ret;
 }
 
-static uint8_t timer5s;
 
 static APP_state_t handle_time_screen(void)
 {
