@@ -36,6 +36,46 @@
 #include "input_mgr.h"
 #include "common.h"
 
+static const INPUT_MGR_config_t input_mgr_config[2] =
+{
+    [0] =
+    {
+        .id = INPUT_MINUS_ID,
+        .gpio_config = { INPUT_MINUS_PORT, INPUT_MINUS_PIN },
+    },
+    [1] =
+    {
+        .id = INPUT_PLUS_ID,
+        .gpio_config = { INPUT_PLUS_PORT, INPUT_PLUS_PIN },
+    }
+};
+
+static const uint8_t displays_config[4][2] =
+{
+    [0] = { DISPLAY0_PORT, DISPLAY0_PIN },
+    [1] = { DISPLAY1_PORT, DISPLAY1_PIN },
+    [2] = { DISPLAY2_PORT, DISPLAY2_PIN },
+    [3] = { DISPLAY3_PORT, DISPLAY3_PIN },
+};
+
+static const SSD_MGR_config_t ssd_mgr_config =
+{
+    .segments =
+    {
+        [0] = { SEGMENTA_PORT, SEGMENTA_PIN },
+        [1] = { SEGMENTB_PORT, SEGMENTB_PIN },
+        [2] = { SEGMENTC_PORT, SEGMENTC_PIN },
+        [3] = { SEGMENTD_PORT, SEGMENTD_PIN },
+        [4] = { SEGMENTE_PORT, SEGMENTE_PIN },
+        [5] = { SEGMENTF_PORT, SEGMENTF_PIN },
+        [6] = { SEGMENTG_PORT, SEGMENTG_PIN },
+    },
+    .is_displays_inverted = true,
+    .is_segments_inverted = false,
+};
+
+static SSD_MGR_displays_t displays[4];
+
 static inline void drivers_init(void)
 {
     GPIO_configure(true);
@@ -75,46 +115,6 @@ static inline void drivers_init(void)
     }
 }
 
-static const INPUT_MGR_config_t input_mgr_config[2] =
-{
-    [0] =
-    {
-        .id = INPUT_MINUS_ID,
-        .gpio_config = { INPUT_MINUS_PORT, INPUT_MINUS_PIN },
-    },
-    [1] =
-    {
-        .id = INPUT_PLUS_ID,
-        .gpio_config = { INPUT_PLUS_PORT, INPUT_PLUS_PIN },
-    }
-};
-
-static const uint8_t displays_config[4][2] =
-{
-    [0] = { DISPLAY0_PORT, DISPLAY0_PIN },
-    [1] = { DISPLAY1_PORT, DISPLAY1_PIN },
-    [2] = { DISPLAY2_PORT, DISPLAY2_PIN },
-    [3] = { DISPLAY3_PORT, DISPLAY3_PIN },
-};
-
-static SSD_MGR_displays_t displays[4];
-
-static const SSD_MGR_config_t ssd_mgr_config =
-{
-    .segments =
-    {
-        [0] = { SEGMENTA_PORT, SEGMENTA_PIN },
-        [1] = { SEGMENTB_PORT, SEGMENTB_PIN },
-        [2] = { SEGMENTC_PORT, SEGMENTC_PIN },
-        [3] = { SEGMENTD_PORT, SEGMENTD_PIN },
-        [4] = { SEGMENTE_PORT, SEGMENTE_PIN },
-        [5] = { SEGMENTF_PORT, SEGMENTF_PIN },
-        [6] = { SEGMENTG_PORT, SEGMENTG_PIN },
-    },
-    .is_displays_inverted = true,
-    .is_segments_inverted = false,
-};
-
 static inline void modules_init(void)
 {
     if(SSD_MGR_initialize(&ssd_mgr_config) != 0)
@@ -152,7 +152,6 @@ int main(void)
     {
         DEBUG_output("APP [fail]\n");
     }
-
 
     DEBUG_output("********************************\n");
     DEBUG_output("******* Mini Thermometer *******\n");
