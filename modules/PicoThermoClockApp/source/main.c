@@ -34,6 +34,7 @@
 #include "app.h"
 #include "PCB0001.h"
 #include "input_mgr.h"
+#include "common.h"
 
 static inline void drivers_init(void)
 {
@@ -126,7 +127,7 @@ static inline void modules_init(void)
         DEBUG_output("WIRE MGR [fail]\n");
     }
 
-    if(INPUT_MGR_initialize(input_mgr_config, sizeof(input_mgr_config)/sizeof(input_mgr_config[0])) != 0)
+    if(INPUT_MGR_initialize(input_mgr_config, ARRAY_SIZE(input_mgr_config)) != 0)
     {
         DEBUG_output("INPUT MGR [fail]\n");
     }
@@ -139,7 +140,7 @@ int main(void)
 
     SYSTEM_init();
 
-    for(uint8_t i = 0u; i < sizeof(displays)/sizeof(displays[0]); i++)
+    for(uint8_t i = 0u; i < ARRAY_SIZE(displays); i++)
     {
         if(SSD_MGR_display_create(&displays[i], &displays_config[i][0]) != 0)
         {
@@ -147,7 +148,7 @@ int main(void)
         }
     }
 
-    if(APP_initialize(displays, sizeof(displays)/sizeof(displays[0])) != 0)
+    if(APP_initialize(displays, ARRAY_SIZE(displays)) != 0)
     {
         DEBUG_output("APP [fail]\n");
     }
