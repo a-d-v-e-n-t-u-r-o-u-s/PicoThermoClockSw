@@ -24,7 +24,6 @@
 #include "system.h"
 #include "system_timer.h"
 #include "1wire_mgr.h"
-#include "ssd_mgr.h"
 #include "debug.h"
 #include "ds1302.h"
 #include <util/delay.h>
@@ -62,8 +61,27 @@ static APP_state_t old_state;
 static INPUT_MGR_event_t new_input;
 static INPUT_MGR_event_t old_input;
 static bool is_colon_active;
+static SSD_MGR_displays_t *app_displays;
+static uint8_t app_displays_size;
 
 static DS1302_datetime_t datetime;
+
+static uint8_t get_digit(uint16_t value, uint8_t position)
+{
+     switch(position)
+     {
+         case 0:
+             return value%10u;
+         case 1:
+             return (value/10u)%10u;
+         case 2:
+             return (value/100u)%10u;
+         case 3:
+             return (value/1000u)%10u;
+     }
+
+     return 0U;
+}
 
 static void set_input_to_defaults(INPUT_MGR_event_t *event)
 {
@@ -132,6 +150,24 @@ static void callback(void)
     }
 }
 
+static void set_to_display(uint16_t value)
+{
+    for(uint8_t i = 0u; i < app_displays_size; i++)
+    {
+        uint8_t digit = get_digit(value, i);
+        SSD_MGR_display_set(&app_displays[i], digit);
+    }
+}
+
+static void set_temp_to_display(uint8_t temp)
+{
+    SSD_MGR_display_set(&app_displays[0], SSD_CHAR_C);
+    uint8_t digit = get_digit(temp, 0);
+    SSD_MGR_display_set(&app_displays[1], digit);
+    digit = get_digit(temp, 1);
+    SSD_MGR_display_set(&app_displays[2], digit);
+    SSD_MGR_display_set(&app_displays[3], SSD_BLANK);
+}
 
 APP_event_t get_app_event(void)
 {
@@ -190,7 +226,7 @@ static APP_state_t handle_splash_screen_on(void)
     datetime.hours = 12u;
     datetime.min = 0u;
     GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
-    SSD_MGR_set(8888U);
+    set_to_display(8888u);
     tick = SYSTEM_timer_get_tick();
     return SPLASH_SCREEN_WAIT;
 }
@@ -238,7 +274,7 @@ static APP_state_t handle_set_year_screen(APP_event_t event)
             break;
     }
 
-    SSD_MGR_set(datetime.year + 2000u);
+    set_to_display(datetime.year + 2000u);
     return ret;
 }
 
@@ -278,7 +314,7 @@ static APP_state_t handle_set_month_screen(APP_event_t event)
             break;
     }
 
-    SSD_MGR_set(datetime.month);
+    set_to_display(datetime.month);
     return ret;
 }
 
@@ -318,7 +354,7 @@ static APP_state_t handle_set_day_screen(APP_event_t event)
             break;
     }
 
-    SSD_MGR_set(datetime.date);
+    set_to_display(datetime.date);
     return ret;
 }
 
@@ -352,7 +388,7 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
 
     DS1302_set_write_protection(false);
     DS1302_set(&datetime);
-    SSD_MGR_set(to_display);
+    set_to_display(to_display);
     tick = SYSTEM_timer_get_tick();
     is_colon_active = true;
     return ret;
@@ -369,7 +405,7 @@ static APP_state_t handle_time_screen(void)
         uint8_t hh = DS1302_get_hours();
 
         DEBUG_output("%d:%d:%d\n",hh, mm, ss);
-        SSD_MGR_set(hh*100 + mm);
+        set_to_display(hh*100 + mm);
         tick = SYSTEM_timer_get_tick();
         timer5s++;
     }
@@ -398,7 +434,8 @@ static APP_state_t handle_temp_screen(void)
         uint16_t display = integer * 100;
         display += fraction;
         DEBUG_output("Temp %d,%d \n", integer, fraction);
-        SSD_MGR_set(display);
+        //set_to_display(display);
+        set_temp_to_display(integer);
         tick = SYSTEM_timer_get_tick();
         timer5s++;
     }
@@ -459,7 +496,7 @@ static void app_main(void)
     }
 }
 
-int8_t APP_initialize(void)
+int8_t APP_initialize(SSD_MGR_displays_t *displays, uint8_t size)
 {
     if(SYSTEM_register_task(app_main, 100u) != 0)
     {
@@ -470,5 +507,7 @@ int8_t APP_initialize(void)
     set_input_to_defaults(&old_input);
     set_datetime_to_defaults(&datetime);
     old_state = SET_YEAR_SCREEN;
+    app_displays = displays;
+    app_displays_size = size;
     return 0;
 }

@@ -88,37 +88,34 @@ static const INPUT_MGR_config_t input_mgr_config[2] =
     }
 };
 
+static const uint8_t displays_config[4][2] =
+{
+    [0] = { DISPLAY0_PORT, DISPLAY0_PIN },
+    [1] = { DISPLAY1_PORT, DISPLAY1_PIN },
+    [2] = { DISPLAY2_PORT, DISPLAY2_PIN },
+    [3] = { DISPLAY3_PORT, DISPLAY3_PIN },
+};
+
+static SSD_MGR_displays_t displays[4];
+
+static const SSD_MGR_config_t ssd_mgr_config =
+{
+    .segments =
+    {
+        [0] = { SEGMENTA_PORT, SEGMENTA_PIN },
+        [1] = { SEGMENTB_PORT, SEGMENTB_PIN },
+        [2] = { SEGMENTC_PORT, SEGMENTC_PIN },
+        [3] = { SEGMENTD_PORT, SEGMENTD_PIN },
+        [4] = { SEGMENTE_PORT, SEGMENTE_PIN },
+        [5] = { SEGMENTF_PORT, SEGMENTF_PIN },
+        [6] = { SEGMENTG_PORT, SEGMENTG_PIN },
+    },
+    .is_displays_inverted = true,
+    .is_segments_inverted = false,
+};
+
 static inline void modules_init(void)
 {
-    uint8_t displays[4][2] =
-    {
-        [0] = { DISPLAY0_PORT, DISPLAY0_PIN },
-        [1] = { DISPLAY1_PORT, DISPLAY1_PIN },
-        [2] = { DISPLAY2_PORT, DISPLAY2_PIN },
-        [3] = { DISPLAY3_PORT, DISPLAY3_PIN },
-    };
-
-    SSD_MGR_config_t ssd_mgr_config =
-    {
-        .seg_config =
-        {
-            [0] = { SEGMENTA_PORT, SEGMENTA_PIN },
-            [1] = { SEGMENTB_PORT, SEGMENTB_PIN },
-            [2] = { SEGMENTC_PORT, SEGMENTC_PIN },
-            [3] = { SEGMENTD_PORT, SEGMENTD_PIN },
-            [4] = { SEGMENTE_PORT, SEGMENTE_PIN },
-            [5] = { SEGMENTF_PORT, SEGMENTF_PIN },
-            [6] = { SEGMENTG_PORT, SEGMENTG_PIN },
-            [7] = { SEGMENTDP_PORT, SEGMENTDP_PIN },
-        },
-        .disp_config = displays,
-        .disp_config_size = 4u,
-        .is_segment_mode = false,
-        .is_disp_inverted_logic = true,
-        .is_segment_inverted_logic = false,
-    };
-
-
     if(SSD_MGR_initialize(&ssd_mgr_config) != 0)
     {
         DEBUG_output("SSD MGR [fail]\n");
@@ -142,10 +139,19 @@ int main(void)
 
     SYSTEM_init();
 
-    if(APP_initialize() != 0)
+    for(uint8_t i = 0u; i < sizeof(displays)/sizeof(displays[0]); i++)
+    {
+        if(SSD_MGR_display_create(&displays[i], &displays_config[i][0]) != 0)
+        {
+            DEBUG_output("disp create [fail]\n");
+        }
+    }
+
+    if(APP_initialize(displays, sizeof(displays)/sizeof(displays[0])) != 0)
     {
         DEBUG_output("APP [fail]\n");
     }
+
 
     DEBUG_output("********************************\n");
     DEBUG_output("******* Mini Thermometer *******\n");

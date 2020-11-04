@@ -21,5 +21,6 @@
  *
  */
 #include <stdint.h>
+#include "ssd_mgr.h"
 
-int8_t APP_initialize(void);
+int8_t APP_initialize(SSD_MGR_displays_t *displays, uint8_t size);
