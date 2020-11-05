@@ -100,31 +100,6 @@ static void set_datetime_to_defaults(DS1302_datetime_t *data)
     data->format = 0u;
 }
 
-static uint16_t get_converted_fraction(uint16_t value)
-{
-    uint16_t ret = 0;
-    if((value & (1 << 3)) != 0)
-    {
-        ret += 50;
-    }
-    if((value & (1 << 2)) != 0)
-    {
-        ret += 25;
-    }
-
-    if((value & (1 << 1)) != 0)
-    {
-        ret += 13;
-    }
-
-    if((value & (1 << 0)) != 0)
-    {
-        ret += 7;
-    }
-
-    return ret;
-}
-
 static void callback(void)
 {
     static uint32_t colon_tick;
@@ -156,16 +131,6 @@ static void set_to_display(uint16_t value)
         uint8_t digit = get_digit(value, i);
         SSD_MGR_display_set(&app_displays[i], digit);
     }
-}
-
-static void set_temp_to_display(uint8_t temp)
-{
-    SSD_MGR_display_set(&app_displays[0], SSD_CHAR_C);
-    SSD_MGR_display_set(&app_displays[1], SSD_CHAR_DEGREE);
-    uint8_t digit = get_digit(temp, 0);
-    SSD_MGR_display_set(&app_displays[2], digit);
-    digit = get_digit(temp, 1);
-    SSD_MGR_display_set(&app_displays[3], digit);
 }
 
 APP_event_t get_app_event(void)
@@ -427,13 +392,31 @@ static APP_state_t handle_temp_screen(void)
     if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 1000)
     {
         uint16_t temperature = WIRE_MGR_get_temperature();
-        uint16_t fraction = get_converted_fraction(temperature % 16);
-        uint16_t integer = (temperature / 16);
-        uint16_t display = integer * 100;
-        display += fraction;
-        DEBUG_output("Temp %d,%d \n", integer, fraction);
-        //set_to_display(display);
-        set_temp_to_display(integer);
+        int8_t temp = temperature >> 4u;
+        const bool is_round = ((temperature & ( 1 << 3u)) != 0);
+        const bool is_negative = (temp < 0);
+
+        if(is_round)
+        {
+            temp++;
+        }
+
+        uint8_t temp_abs = is_negative ? -temp : temp;
+        SSD_MGR_display_set(&app_displays[0], SSD_CHAR_C);
+        uint8_t digit = get_digit(temp_abs, 0);
+        SSD_MGR_display_set(&app_displays[1], digit);
+        digit = get_digit(temp_abs, 1);
+        SSD_MGR_display_set(&app_displays[2], digit);
+
+        if(!is_negative)
+        {
+            SSD_MGR_display_set(&app_displays[3], SSD_BLANK);
+        }
+        else
+        {
+            SSD_MGR_display_set(&app_displays[3], SSD_SYMBOL_MINUS);
+        }
+
         tick = SYSTEM_timer_get_tick();
         timer5s++;
     }
