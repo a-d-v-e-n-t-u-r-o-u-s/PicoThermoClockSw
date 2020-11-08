@@ -339,8 +339,14 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
 }
 
 
-static APP_state_t handle_time_screen(void)
+static APP_state_t handle_time_screen(APP_event_t event)
 {
+    if(event == DOUBLE_PRESS)
+    {
+        GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
+        return SET_YEAR_SCREEN;
+    }
+
     if(tick != 0)
     {
         return TIME_SCREEN;
@@ -368,8 +374,14 @@ static APP_state_t handle_time_screen(void)
     }
 }
 
-static APP_state_t handle_temp_screen(void)
+static APP_state_t handle_temp_screen(APP_event_t event)
 {
+    if(event == DOUBLE_PRESS)
+    {
+        GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
+        return SET_YEAR_SCREEN;
+    }
+
     if(tick != 0)
     {
         return TEMP_SCREEN;
@@ -453,10 +465,10 @@ static void app_main(void)
             state = handle_set_time_screen(app_event);
             break;
         case TIME_SCREEN:
-            state = handle_time_screen();
+            state = handle_time_screen(app_event);
             break;
         case TEMP_SCREEN:
-            state = handle_temp_screen();
+            state = handle_temp_screen(app_event);
             break;
     }
 }
