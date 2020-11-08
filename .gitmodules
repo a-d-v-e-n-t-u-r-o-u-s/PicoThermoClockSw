@@ -25,3 +25,6 @@
 [submodule "modules/InputMgr"]
 	path = modules/InputMgr
 	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/input_mgr.git
+[submodule "drivers/common"]
+	path = drivers/common
+	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/common.git
