@@ -1,4 +1,5 @@
 USED_DRIVERS += gpio
+USED_DRIVERS += common
 USED_DRIVERS += usart
 USED_DRIVERS += 1wire
 USED_DRIVERS += ds1302
