@@ -59,7 +59,6 @@ static APP_state_t state;
 static APP_state_t old_state;
 static INPUT_MGR_event_t new_input;
 static INPUT_MGR_event_t old_input;
-static uint8_t colon_state;
 static SSD_MGR_displays_t *app_displays;
 static uint8_t app_displays_size;
 static uint8_t timer5s;
@@ -354,8 +353,7 @@ static APP_state_t handle_time_screen(void)
     DEBUG_output("%d:%d:%d\n",hh, mm, ss);
     set_to_display(hh*100 + mm);
     tick = 1000U;
-    colon_state ^=1;
-    GPIO_write_pin(COLON_PORT, COLON_PIN, colon_state);
+    GPIO_toggle_pin(COLON_PORT, COLON_PIN);
     timer5s++;
 
     if(timer5s > 20U)
@@ -382,8 +380,7 @@ static APP_state_t handle_temp_screen(void)
     const bool is_round = ((temperature & ( 1 << 3u)) != 0);
     const bool is_negative = (temp < 0);
 
-    colon_state = 0u;
-    GPIO_write_pin(COLON_PORT, COLON_PIN, colon_state);
+    GPIO_write_pin(COLON_PORT, COLON_PIN, 0u);
 
     if(is_round)
     {
