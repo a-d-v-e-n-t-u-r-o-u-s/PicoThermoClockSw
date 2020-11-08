@@ -59,7 +59,7 @@ static APP_state_t state;
 static APP_state_t old_state;
 static INPUT_MGR_event_t new_input;
 static INPUT_MGR_event_t old_input;
-static bool is_colon_active;
+static uint8_t colon_state;
 static SSD_MGR_displays_t *app_displays;
 static uint8_t app_displays_size;
 static uint8_t timer5s;
@@ -102,25 +102,9 @@ static void set_datetime_to_defaults(DS1302_datetime_t *data)
 
 static void callback(void)
 {
-    static uint32_t colon_tick;
-    static bool is_colon;
-
-    if(is_colon_active)
+    if(tick != 0U)
     {
-        if(SYSTEM_timer_tick_difference(colon_tick, SYSTEM_timer_get_tick()) > 1000)
-        {
-            colon_tick = SYSTEM_timer_get_tick();
-            if(is_colon)
-            {
-                GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
-                is_colon = false;
-            }
-            else
-            {
-                GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
-                is_colon = true;
-            }
-        }
+        tick--;
     }
 }
 
@@ -191,21 +175,19 @@ static APP_state_t handle_splash_screen_on(void)
     datetime.min = 0u;
     GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
     set_to_display(8888u);
-    tick = SYSTEM_timer_get_tick();
+    tick = 5000u;
     return SPLASH_SCREEN_WAIT;
 }
 
 static APP_state_t handle_splash_screen_wait(void)
 {
-    if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 5000)
-    {
-        GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
-        return SET_YEAR_SCREEN;
-    }
-    else
+    if(tick != 0)
     {
         return SPLASH_SCREEN_WAIT;
     }
+
+    GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
+    return SET_YEAR_SCREEN;
 }
 
 static APP_state_t handle_set_year_screen(APP_event_t event)
@@ -353,32 +335,33 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
     DS1302_set_write_protection(false);
     DS1302_set(&datetime);
     set_to_display(to_display);
-    tick = SYSTEM_timer_get_tick();
-    is_colon_active = true;
+    tick = 1000u;
     return ret;
 }
 
 
 static APP_state_t handle_time_screen(void)
 {
-    if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 1000)
+    if(tick != 0)
     {
-        uint8_t ss = DS1302_get_seconds();
-        uint8_t mm = DS1302_get_minutes();
-        uint8_t hh = DS1302_get_hours();
-
-        DEBUG_output("%d:%d:%d\n",hh, mm, ss);
-        set_to_display(hh*100 + mm);
-        tick = SYSTEM_timer_get_tick();
-        timer5s++;
+        return TIME_SCREEN;
     }
 
-    if(timer5s > 5U)
+    uint8_t ss = DS1302_get_seconds();
+    uint8_t mm = DS1302_get_minutes();
+    uint8_t hh = DS1302_get_hours();
+
+    DEBUG_output("%d:%d:%d\n",hh, mm, ss);
+    set_to_display(hh*100 + mm);
+    tick = 1000U;
+    colon_state ^=1;
+    GPIO_write_pin(COLON_PORT, COLON_PIN, colon_state);
+    timer5s++;
+
+    if(timer5s > 20U)
     {
         timer5s = 0u;
-        tick = SYSTEM_timer_get_tick();
-        is_colon_active = false;
-        GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
+        tick = 1000U;
         return TEMP_SCREEN;
     }
     else
@@ -389,43 +372,47 @@ static APP_state_t handle_time_screen(void)
 
 static APP_state_t handle_temp_screen(void)
 {
-    if(SYSTEM_timer_tick_difference(tick, SYSTEM_timer_get_tick()) > 1000)
+    if(tick != 0)
     {
-        uint16_t temperature = WIRE_MGR_get_temperature();
-        int8_t temp = temperature >> 4u;
-        const bool is_round = ((temperature & ( 1 << 3u)) != 0);
-        const bool is_negative = (temp < 0);
-
-        if(is_round)
-        {
-            temp++;
-        }
-
-        uint8_t temp_abs = is_negative ? -temp : temp;
-        SSD_MGR_display_set(&app_displays[0], SSD_CHAR_C);
-        uint8_t digit = get_digit(temp_abs, 0);
-        SSD_MGR_display_set(&app_displays[1], digit);
-        digit = get_digit(temp_abs, 1);
-        SSD_MGR_display_set(&app_displays[2], digit);
-
-        if(!is_negative)
-        {
-            SSD_MGR_display_set(&app_displays[3], SSD_BLANK);
-        }
-        else
-        {
-            SSD_MGR_display_set(&app_displays[3], SSD_SYMBOL_MINUS);
-        }
-
-        tick = SYSTEM_timer_get_tick();
-        timer5s++;
+        return TEMP_SCREEN;
     }
+
+    uint16_t temperature = WIRE_MGR_get_temperature();
+    int8_t temp = temperature >> 4u;
+    const bool is_round = ((temperature & ( 1 << 3u)) != 0);
+    const bool is_negative = (temp < 0);
+
+    colon_state = 0u;
+    GPIO_write_pin(COLON_PORT, COLON_PIN, colon_state);
+
+    if(is_round)
+    {
+        temp++;
+    }
+
+    uint8_t temp_abs = is_negative ? -temp : temp;
+    SSD_MGR_display_set(&app_displays[0], SSD_CHAR_C);
+    uint8_t digit = get_digit(temp_abs, 0);
+    SSD_MGR_display_set(&app_displays[1], digit);
+    digit = get_digit(temp_abs, 1);
+    SSD_MGR_display_set(&app_displays[2], digit);
+
+    if(!is_negative)
+    {
+        SSD_MGR_display_set(&app_displays[3], SSD_BLANK);
+    }
+    else
+    {
+        SSD_MGR_display_set(&app_displays[3], SSD_SYMBOL_MINUS);
+    }
+
+    tick = 1000U;
+    timer5s++;
 
     if(timer5s > 5U)
     {
         timer5s = 0;
-        tick = SYSTEM_timer_get_tick();
-        is_colon_active = true;
+        tick = 1000u;
         return TIME_SCREEN;
     }
     else
