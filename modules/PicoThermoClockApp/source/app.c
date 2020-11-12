@@ -88,18 +88,6 @@ static void set_input_to_defaults(INPUT_MGR_event_t *event)
     event->event = UINT8_MAX;
 }
 
-static void set_datetime_to_defaults(DS1302_datetime_t *data)
-{
-    data->year = 0u;
-    data->month = 12u;
-    data->date = 1u;
-    data->weekday = 7u;
-    data->hours = 12u;
-    data->min = 0u;
-    data->secs = 0u;
-    data->format = 0u;
-}
-
 static void callback(void)
 {
     if(tick != 0U)
@@ -518,7 +506,6 @@ int8_t APP_initialize(SSD_MGR_displays_t *displays, uint8_t size)
 
     SYSTEM_timer_register(callback);
     set_input_to_defaults(&old_input);
-    set_datetime_to_defaults(&datetime);
     old_state = SET_YEAR_SCREEN;
     app_displays = displays;
     app_displays_size = size;
