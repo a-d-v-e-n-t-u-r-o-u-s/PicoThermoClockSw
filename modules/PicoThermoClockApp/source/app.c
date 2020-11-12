@@ -39,6 +39,7 @@ typedef enum
     SET_YEAR_SCREEN,
     SET_MONTH_SCREEN,
     SET_DAY_SCREEN,
+    SET_WEEKDAY_SCREEN,
     SET_TIME_SCREEN,
     TIME_SCREEN,
     TEMP_SCREEN,
@@ -202,6 +203,7 @@ static APP_state_t handle_set_year_screen(APP_event_t event)
             break;
         case PLUS_LONG_PRESS:
         case PLUS_RELEASE:
+
             datetime.year++;
             datetime.year %=100u;
             break;
@@ -286,7 +288,7 @@ static APP_state_t handle_set_day_screen(APP_event_t event)
             }
             break;
         case DOUBLE_PRESS:
-            ret = SET_TIME_SCREEN;
+            ret = SET_WEEKDAY_SCREEN;
             break;
         case INVALID:
         default:
@@ -294,6 +296,46 @@ static APP_state_t handle_set_day_screen(APP_event_t event)
     }
 
     set_to_display(datetime.date);
+    return ret;
+}
+
+static APP_state_t handle_set_weekday_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_WEEKDAY_SCREEN;
+
+    switch(event)
+    {
+        case MINUS_LONG_PRESS:
+        case MINUS_RELEASE:
+            if(datetime.weekday == 1)
+            {
+                datetime.weekday= 7u;
+            }
+            else
+            {
+                datetime.weekday--;
+            }
+            break;
+        case PLUS_LONG_PRESS:
+        case PLUS_RELEASE:
+            if(datetime.weekday == 7)
+            {
+                datetime.weekday = 1;
+            }
+            else
+            {
+                datetime.weekday++;
+            }
+            break;
+        case DOUBLE_PRESS:
+            ret = SET_TIME_SCREEN;
+            break;
+        case INVALID:
+        default:
+            break;
+    }
+
+    set_to_display(datetime.weekday);
     return ret;
 }
 
@@ -422,7 +464,6 @@ static APP_state_t handle_temp_screen(APP_event_t event)
     }
 }
 
-
 static void app_main(void)
 {
     if(old_state != state)
@@ -452,6 +493,9 @@ static void app_main(void)
             break;
         case SET_DAY_SCREEN:
             state = handle_set_day_screen(app_event);
+            break;
+        case SET_WEEKDAY_SCREEN:
+            state = handle_set_weekday_screen(app_event);
             break;
         case SET_TIME_SCREEN:
             state = handle_set_time_screen(app_event);
