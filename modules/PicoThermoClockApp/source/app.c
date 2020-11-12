@@ -166,12 +166,6 @@ APP_event_t get_app_event(void)
 
 static APP_state_t handle_splash_screen_on(void)
 {
-    datetime.year = 0U;
-    datetime.month = 12u;
-    datetime.date = 30u;
-    datetime.weekday = 7u;
-    datetime.hours = 12u;
-    datetime.min = 0u;
     GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
     set_to_display(8888u);
     tick = 5000u;
@@ -185,8 +179,8 @@ static APP_state_t handle_splash_screen_wait(void)
         return SPLASH_SCREEN_WAIT;
     }
 
-    GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
-    return SET_YEAR_SCREEN;
+    DS1302_get(&datetime);
+    return TIME_SCREEN;
 }
 
 static APP_state_t handle_set_year_screen(APP_event_t event)
@@ -321,20 +315,18 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
             break;
         case DOUBLE_PRESS:
             ret = TIME_SCREEN;
+            datetime.secs = 0u;
+            DS1302_set_write_protection(false);
+            DS1302_set(&datetime);
+            tick = 1000u;
             break;
         case INVALID:
         default:
             break;
     }
 
-    datetime.secs = 0u;
-
     uint16_t const to_display = datetime.hours*100U + datetime.min;
-
-    DS1302_set_write_protection(false);
-    DS1302_set(&datetime);
     set_to_display(to_display);
-    tick = 1000u;
     return ret;
 }
 
