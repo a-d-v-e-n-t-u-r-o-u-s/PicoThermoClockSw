@@ -90,7 +90,7 @@ static inline void drivers_init(void)
         .stopbits = USART_1_STOP_BITS,
     };
 
-    (void) USART_configure(&config);
+    USART_configure(&config);
 
     DEBUG_init(NULL);
 
@@ -104,33 +104,15 @@ static inline void drivers_init(void)
         }
     };
 
-    if(DS1302_configure(&rtc_config))
-    {
-        DEBUG_output("DS1302 [fail]\n");
-    }
-
-    if(WIRE_configure(WIRE_DATA_PORT, WIRE_DATA_PIN) != 0)
-    {
-        DEBUG_output("WIRE [fail]\n");
-    }
+    DS1302_configure(&rtc_config);
+    WIRE_configure(WIRE_DATA_PORT, WIRE_DATA_PIN);
 }
 
 static inline void modules_init(void)
 {
-    if(SSD_MGR_initialize(&ssd_mgr_config) != 0)
-    {
-        DEBUG_output("SSD MGR [fail]\n");
-    }
-
-    if(WIRE_MGR_initialize() != 0)
-    {
-        DEBUG_output("WIRE MGR [fail]\n");
-    }
-
-    if(INPUT_MGR_initialize(input_mgr_config, ARRAY_SIZE(input_mgr_config)) != 0)
-    {
-        DEBUG_output("INPUT MGR [fail]\n");
-    }
+    SSD_MGR_initialize(&ssd_mgr_config);
+    WIRE_MGR_initialize();
+    INPUT_MGR_initialize(input_mgr_config, ARRAY_SIZE(input_mgr_config));
 }
 
 int main(void)
@@ -142,16 +124,10 @@ int main(void)
 
     for(uint8_t i = 0u; i < ARRAY_SIZE(displays); i++)
     {
-        if(SSD_MGR_display_create(&displays[i], &displays_config[i][0]) != 0)
-        {
-            DEBUG_output("disp create [fail]\n");
-        }
+        SSD_MGR_display_create(&displays[i], &displays_config[i][0]);
     }
 
-    if(APP_initialize(displays, ARRAY_SIZE(displays)) != 0)
-    {
-        DEBUG_output("APP [fail]\n");
-    }
+    APP_initialize(displays, ARRAY_SIZE(displays));
 
     DEBUG_output("********************************\n");
     DEBUG_output("******* Mini Thermometer *******\n");

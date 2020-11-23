@@ -20,6 +20,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#define DEBUG_APP_ID "APP"
 #include "app.h"
 #include "system.h"
 #include "system_timer.h"
@@ -497,17 +498,15 @@ static void app_main(void)
     }
 }
 
-int8_t APP_initialize(SSD_MGR_displays_t *displays, uint8_t size)
+void APP_initialize(SSD_MGR_displays_t *displays, uint8_t size)
 {
-    if(SYSTEM_register_task(app_main, 100u) != 0)
-    {
-        return -1;
-    }
+    int8_t ret = SYSTEM_register_task(app_main, 100u);
+    (void) ret;
+    ASSERT(ret == 0);
 
     SYSTEM_timer_register(callback);
     set_input_to_defaults(&old_input);
     old_state = SET_YEAR_SCREEN;
     app_displays = displays;
     app_displays_size = size;
-    return 0;
 }
