@@ -112,7 +112,7 @@ APP_event_t get_app_event(void)
 
     if(INPUT_MGR_get_event(&new_input) == 0)
     {
-        DEBUG_output("Ev: [%d] \n",new_input.event);
+        DEBUG("Ev: [%d] \n",new_input.event);
 
         if(old_input.event == BUTTON_SHORT_PRESSED &&
                 new_input.event == BUTTON_SHORT_PRESSED)
@@ -379,7 +379,7 @@ static APP_state_t handle_time_screen(APP_event_t event)
     uint8_t mm = DS1302_get_minutes();
     uint8_t hh = DS1302_get_hours();
 
-    DEBUG_output("%d:%d:%d\n",hh, mm, ss);
+    DEBUG("%d:%d:%d\n",hh, mm, ss);
     set_to_display(hh*100 + mm);
     tick = 1000U;
     GPIO_toggle_pin(COLON_PORT, COLON_PIN);
@@ -457,7 +457,7 @@ static void app_main(void)
 {
     if(old_state != state)
     {
-        DEBUG_output("Old [%d] -> New [%d]\n", old_state, state);
+        DEBUG("Old [%d] -> New [%d]\n", old_state, state);
         old_state = state;
     }
 

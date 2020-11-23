@@ -129,9 +129,9 @@ int main(void)
 
     APP_initialize(displays, ARRAY_SIZE(displays));
 
-    DEBUG_output("********************************\n");
-    DEBUG_output("******* Mini Thermometer *******\n");
-    DEBUG_output("********************************\n");
+    DEBUG("%s", "********************************\n");
+    DEBUG("%s", "******* Mini Thermometer *******\n");
+    DEBUG("%s", "********************************\n");
 
     while(true)
     {
