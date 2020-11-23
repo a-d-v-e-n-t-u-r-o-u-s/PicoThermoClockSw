@@ -20,6 +20,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#define DEBUG_ENABLED DEBUG_MAIN_ENABLED
+#define DEBUG_LEVEL DEBUG_MAIN_LEVEL
+#define DEBUG_APP_ID "MAIN"
+
 #include <stdint.h>
 #include <stddef.h>
 #include "system.h"
@@ -129,9 +133,9 @@ int main(void)
 
     APP_initialize(displays, ARRAY_SIZE(displays));
 
-    DEBUG("%s", "********************************\n");
-    DEBUG("%s", "******* Mini Thermometer *******\n");
-    DEBUG("%s", "********************************\n");
+    DEBUG(DL_VERBOSE, "%s", "********************************\n");
+    DEBUG(DL_VERBOSE, "%s", "******* Mini Thermometer *******\n");
+    DEBUG(DL_VERBOSE, "%s", "********************************\n");
 
     while(true)
     {
