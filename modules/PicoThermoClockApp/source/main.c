@@ -78,6 +78,11 @@ static const SSD_MGR_config_t ssd_mgr_config =
     .is_segments_inverted = false,
 };
 
+static const WIRE_MGR_config_t wire_mgr_config =
+{
+    .is_crc = true
+};
+
 static SSD_MGR_displays_t displays[4];
 
 static inline void drivers_init(void)
@@ -115,7 +120,7 @@ static inline void drivers_init(void)
 static inline void modules_init(void)
 {
     SSD_MGR_initialize(&ssd_mgr_config);
-    WIRE_MGR_initialize();
+    WIRE_MGR_initialize(&wire_mgr_config);
     INPUT_MGR_initialize(input_mgr_config, ARRAY_SIZE(input_mgr_config));
 }
 
