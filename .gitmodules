@@ -28,3 +28,6 @@
 [submodule "drivers/common"]
 	path = drivers/common
 	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/common.git
+[submodule "modules/Stat"]
+	path = modules/Stat
+	url = git@github.com:a-d-v-e-n-t-u-r-o-u-s/stat.git
