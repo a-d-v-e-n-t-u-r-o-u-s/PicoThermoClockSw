@@ -126,6 +126,7 @@ APP_event_t get_app_event(void)
         else if(old_input.id == INPUT_MINUS_ID &&
                 old_input.event == BUTTON_SHORT_PRESSED &&
                 new_input.id == INPUT_MINUS_ID &&
+
                 new_input.event == BUTTON_RELEASED)
         {
             ret = MINUS_RELEASE;
@@ -378,11 +379,10 @@ static APP_state_t handle_time_screen(APP_event_t event)
         return TIME_SCREEN;
     }
 
-    uint8_t ss = DS1302_get_seconds();
     uint8_t mm = DS1302_get_minutes();
     uint8_t hh = DS1302_get_hours();
 
-    DEBUG(DL_VERBOSE, "%d:%d:%d\n",hh, mm, ss);
+    DEBUG(DL_ERROR, "%d:%d:%d\n",hh, mm, DS1302_get_seconds());
     set_to_display(hh*100 + mm);
     tick = 1000U;
     GPIO_toggle_pin(COLON_PORT, COLON_PIN);
