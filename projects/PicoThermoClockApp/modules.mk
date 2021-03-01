@@ -3,5 +3,6 @@ USED_MODULES += System
 USED_MODULES += SsdMgr
 USED_MODULES += 1WireMgr
 USED_MODULES += InputMgr
+USED_MODULES += Stat
 
 MAIN_MODULE = PicoThermoClockApp

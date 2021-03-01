@@ -38,6 +38,7 @@
 #include "app.h"
 #include "PCB0001.h"
 #include "input_mgr.h"
+#include "stat.h"
 #include "common.h"
 
 static const INPUT_MGR_config_t input_mgr_config[2] =
@@ -119,6 +120,7 @@ static inline void drivers_init(void)
 
 static inline void modules_init(void)
 {
+    STAT_initialize();
     SSD_MGR_initialize(&ssd_mgr_config);
     WIRE_MGR_initialize(&wire_mgr_config);
     INPUT_MGR_initialize(input_mgr_config, ARRAY_SIZE(input_mgr_config));
