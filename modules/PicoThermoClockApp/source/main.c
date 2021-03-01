@@ -138,9 +138,9 @@ int main(void)
 
     APP_initialize(displays, ARRAY_SIZE(displays));
 
-    DEBUG(DL_VERBOSE, "%s", "********************************\n");
-    DEBUG(DL_VERBOSE, "%s", "******* Mini Thermometer *******\n");
-    DEBUG(DL_VERBOSE, "%s", "********************************\n");
+    DEBUG(DL_INFO, "%s", "********************************\n");
+    DEBUG(DL_INFO, "%s", "******* Mini Thermometer *******\n");
+    DEBUG(DL_INFO, "%s", "********************************\n");
 
     while(true)
     {
