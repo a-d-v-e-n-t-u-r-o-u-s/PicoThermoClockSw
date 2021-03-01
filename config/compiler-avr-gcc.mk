@@ -12,6 +12,8 @@ ARFLAGS = rcs
 
 CFLAGS = -c
 CFLAGS += -Wall
+CFLAGS += -Werror
+#CFLAGS += -Wpedantic
 CFLAGS += -mmcu=atmega8
 CFLAGS += -Os
 CFLAGS += -std=c99
