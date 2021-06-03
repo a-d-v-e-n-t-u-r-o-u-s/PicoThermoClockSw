@@ -503,10 +503,7 @@ static void app_main(void)
 
 void APP_initialize(SSD_MGR_displays_t *displays, uint8_t size)
 {
-    int8_t ret = SYSTEM_register_task(app_main, 100u);
-    (void) ret;
-    ASSERT(ret == 0);
-
+    SYSTEM_register_task(app_main, 100u);
     SYSTEM_timer_register(callback);
     set_input_to_defaults(&old_input);
     old_state = SET_YEAR_SCREEN;
