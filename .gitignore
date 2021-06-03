@@ -2,9 +2,11 @@
 /docs
 /build*
 /.test*
+/.cache
 /documentation
 cscope.out
 config-user.mk
+compile_commands.json
 .vim-bookmarks
 *.swp
 *.swo
