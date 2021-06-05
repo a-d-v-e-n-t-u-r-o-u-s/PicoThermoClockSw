@@ -15,6 +15,8 @@ CFLAGS += -Wall
 CFLAGS += -Werror
 CFLAGS += -Wundef
 #CFLAGS += -Wpedantic
+CFLAGS += -fdata-sections
+CFLAGS += -ffunction-sections
 CFLAGS += -mmcu=atmega8
 CFLAGS += -Os
 CFLAGS += -std=c99
@@ -27,6 +29,7 @@ CFLAGS += -o $(OBJECTS_DIR)/$(@F)
 LDFLAGS += -mmcu=atmega8
 LDFLAGS += -Wl,-Map,$(BIN_DIR_FORMATED)$(DELIM)$(OUTPUT).map
 LDFLAGS += -Wl,--cref
+LDFLAGS += -Wl,--gc-sections
 LDFLAGS += -Wl,-L$(LIB_DIR)
 
 LOADER_FLAGS += -c usbasp
