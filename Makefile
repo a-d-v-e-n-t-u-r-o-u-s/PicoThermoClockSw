@@ -101,12 +101,20 @@ banner:
 	@echo          OUTPUT: $(OUTPUT)
 	@echo -------------------------------------------------------------------------------
 
+#TODO executable not always have to be *.elf file, this must be done more generic
 done:
 	@echo -------------------------------------------------------------------------------
 	@echo Through the Force the binary files I build.
 	@echo          OUTPUT: $(OUTPUT)
-	@echo        RAM :
-	@echo      FLASH :
+	@echo -------------------------------------------------------------------------------
+	@echo TOP 10 RAM users:
+	$(NM) --size-sort --print-size --reverse-sort $(BIN_DIR_FORMATED)$(DELIM)$(OUTPUT).elf | $(GREP) " [bBdDrR] " | $(HEAD) -10
+	@echo -------------------------------------------------------------------------------
+	@echo TOP 10 FLASH users:
+	$(NM) --size-sort --print-size --reverse-sort $(BIN_DIR_FORMATED)$(DELIM)$(OUTPUT).elf | $(GREP) " [tT] " | $(HEAD) -10
+	@echo -------------------------------------------------------------------------------
+	$(SIZE) --mcu=$(MCU) -C $(BIN_DIR_FORMATED)$(DELIM)$(OUTPUT).elf
+	$(SIZE) --mcu=$(MCU) $(BIN_DIR_FORMATED)$(DELIM)$(OUTPUT).elf
 	@echo May the Force be with you!!!
 	@echo -------------------------------------------------------------------------------
 

@@ -1,6 +1,8 @@
 CC = avr-gcc
 LD = avr-gcc
 AR = avr-ar
+NM = avr-nm
+SIZE = avr-size
 LOADER = avrdude
 
 LIBPREFIX := lib
@@ -17,7 +19,7 @@ CFLAGS += -Wundef
 #CFLAGS += -Wpedantic
 CFLAGS += -fdata-sections
 CFLAGS += -ffunction-sections
-CFLAGS += -mmcu=atmega8
+CFLAGS += -mmcu=$(MCU)
 CFLAGS += -Os
 CFLAGS += -std=c99
 CFLAGS += $(addprefix -I,$(INCLUDE_DIR))
@@ -26,7 +28,7 @@ CFLAGS += -Wa,-adhlns=$(OBJECTS_DIR)/$(@F).lst
 CFLAGS += -o $(OBJECTS_DIR)/$(@F)
 
 
-LDFLAGS += -mmcu=atmega8
+LDFLAGS += -mmcu=$(MCU)
 LDFLAGS += -Wl,-Map,$(BIN_DIR_FORMATED)$(DELIM)$(OUTPUT).map
 LDFLAGS += -Wl,--cref
 LDFLAGS += -Wl,--gc-sections
