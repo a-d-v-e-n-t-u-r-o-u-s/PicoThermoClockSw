@@ -8,4 +8,4 @@ before_install:
   - git submodule update --init --recursive
 install:
   - sudo apt-get install -qq gcc-avr binutils-avr avr-libc
-script: make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc
+script: make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8
