@@ -8,7 +8,7 @@ LOADER = avrdude
 LIBPREFIX := lib
 LIBEXT := .a
 
-CDEFS = F_CPU=16000000UL
+CDEFS = PCB=$(PCB)
 
 ARFLAGS = rcs
 

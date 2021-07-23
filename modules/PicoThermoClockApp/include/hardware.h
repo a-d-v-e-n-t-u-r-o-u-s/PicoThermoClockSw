@@ -33,17 +33,14 @@
 
 /*@{*/
 
-/*!
- * \brief Define PCB0000 as this with proper pin assignment
- *
- * \todo move this definition outside hardware.h file, it shall be passed from makefile
- */
-#define PCB0000 1
-
-#if PCB0000
-    #include "../source/PCB0000.h"
+#if defined PCB
+#if (PCB == 1U)
+    #include "../source/PCB0001.h"
 #else
     #error "Choose version of PCB to which project shall apply"
+#endif
+#else
+    #error "PCB is not defined"
 #endif
 
 /*@}*/

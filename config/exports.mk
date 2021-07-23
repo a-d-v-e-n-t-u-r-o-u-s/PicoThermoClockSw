@@ -2,7 +2,7 @@
 export CC LD SIZE NM
 
 # exporting from config/config.mk
-export PROJECT TARGET COMPILER MCU
+export PROJECT TARGET COMPILER MCU PCB
 
 # exporting from Makefile
 export LIB_DIR BIN_DIR DEP_DIR TOOLS_DIR OUTPUT BUILD_DIR PROJECT_DIR

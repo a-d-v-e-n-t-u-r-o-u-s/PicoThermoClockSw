@@ -25,6 +25,7 @@
 #define DEBUG_APP_ID "APP"
 
 #include "app.h"
+#include "hardware.h"
 #include "system.h"
 #include "system_timer.h"
 #include "1wire_mgr.h"
@@ -32,7 +33,6 @@
 #include "ds1302.h"
 #include <util/delay.h>
 #include <stdbool.h>
-#include "PCB0001.h"
 #include "input_mgr.h"
 
 typedef enum

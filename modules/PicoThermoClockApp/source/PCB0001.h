@@ -29,6 +29,7 @@
  * \ingroup MiniThermo
  * \brief Configures pin assignment for PCB0000
  */
+#define F_CPU                   (16000000UL)
 
 #define WIRE_DATA_PORT          (GPIO_PORTD)
 #define WIRE_DATA_PIN           (4U)
