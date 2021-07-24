@@ -18,7 +18,6 @@ addons:
         secure: tPXJAbvTabmxFO+90ZtK/B/4929ypvsYmYDgzs0SrCSYOGukmW6A9OtdiYmh0D88L3l8T68UWzjU4/eaedEeF7gO9IHzEoVa346ylpdNQTC9Ng/krQBktQo+523eD53GxbvxQOtE42JL09ZPQuXCCkQsIHMgRA9IhRYQihFi1fJ/8GBteSmyzc+0CTCyZxyjwrtw1Si1Ichlt2IiCqiQstKRkPqQVR4mPiv8CzzrE/Zc/Yg8bwYrbr7U1hwb9foVidzh1R90SBhHLgIy9h0oUOlczQq2g1KrqnNOcICZNBPBwP6/jFB5YouPju9H5aH9yXHETp9FCty/Pdq1y9HjzOxr5pre4QuXKvo3Xt5k6qdswJeoODSh4aZicIUoGlfp6d5xqZcJluU0s9Y9XaYwuTvD2V/IMMg36xpYPqWWV/9aLTwBNYkoORyr6UJSDYtrik/m+PdmdEj8xKLh0AF7aYiIy3I6Y4UdU42u7AbaUk1KoyOVw3XdnImla5Txa73MwdW/jLyuWd3wutyrhKBEHuf1ATK4/Ft1qds8yzltX2fS4weoYGuXdxHvO4ELxQhI++zcjuKjDs4nvkwtvztyTnDEe1vEho+VSZJzGBEgsnu8lXPJ99h7IoUy3Souo8CjIgcZew07OedZmPRS1IxNHqf+H0lKF4oLnjqOUFJADAY=
 
 script:
-  - mvn clean install
   - mvn -Dsonar.scm.exclusions.disabled sonar:sonar
   # Wraps the compilation with the Build Wrapper to generate configuration (used
   # later by the SonarScanner) into the "bw-output" folder
