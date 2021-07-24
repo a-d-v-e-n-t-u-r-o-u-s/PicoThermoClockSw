@@ -11,7 +11,6 @@ script: make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 P
 env:
   global:
     secure: tPXJAbvTabmxFO+90ZtK/B/4929ypvsYmYDgzs0SrCSYOGukmW6A9OtdiYmh0D88L3l8T68UWzjU4/eaedEeF7gO9IHzEoVa346ylpdNQTC9Ng/krQBktQo+523eD53GxbvxQOtE42JL09ZPQuXCCkQsIHMgRA9IhRYQihFi1fJ/8GBteSmyzc+0CTCyZxyjwrtw1Si1Ichlt2IiCqiQstKRkPqQVR4mPiv8CzzrE/Zc/Yg8bwYrbr7U1hwb9foVidzh1R90SBhHLgIy9h0oUOlczQq2g1KrqnNOcICZNBPBwP6/jFB5YouPju9H5aH9yXHETp9FCty/Pdq1y9HjzOxr5pre4QuXKvo3Xt5k6qdswJeoODSh4aZicIUoGlfp6d5xqZcJluU0s9Y9XaYwuTvD2V/IMMg36xpYPqWWV/9aLTwBNYkoORyr6UJSDYtrik/m+PdmdEj8xKLh0AF7aYiIy3I6Y4UdU42u7AbaUk1KoyOVw3XdnImla5Txa73MwdW/jLyuWd3wutyrhKBEHuf1ATK4/Ft1qds8yzltX2fS4weoYGuXdxHvO4ELxQhI++zcjuKjDs4nvkwtvztyTnDEe1vEho+VSZJzGBEgsnu8lXPJ99h7IoUy3Souo8CjIgcZew07OedZmPRS1IxNHqf+H0lKF4oLnjqOUFJADAY=
-
 addons:
   sonarcloud:
     organization: "a-d-v-e-n-t-u-r-o-u-s-github"
@@ -19,5 +18,9 @@ addons:
       secure: "**************************" # encrypted value of your token
 
 script:
-  # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
-  - sonar-scanner
+  # Wraps the compilation with the Build Wrapper to generate configuration (used
+  # later by the SonarScanner) into the "bw-output" folder
+  - build-wrapper-linux-x86-64 --out-dir bw-output make clean
+  # And finally run the SonarCloud analysis - read the "sonar-project.properties"
+  # file to see the specific configuration
+  - sonar-scanner -Dsonar.cfamily.build-wrapper-output=bw-output
