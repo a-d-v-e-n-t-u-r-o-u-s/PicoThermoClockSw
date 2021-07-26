@@ -73,17 +73,17 @@ static uint8_t get_digit(uint16_t value, uint8_t position)
 {
      switch(position)
      {
-         case 0:
+        case 0:
              return value%10u;
-         case 1:
+        case 1:
              return (value/10u)%10u;
-         case 2:
+        case 2:
              return (value/100u)%10u;
-         case 3:
+        case 3:
              return (value/1000u)%10u;
+        default:
+             return 0u;
      }
-
-     return 0U;
 }
 
 static void set_input_to_defaults(INPUT_MGR_event_t *event)
@@ -497,6 +497,9 @@ static void app_main(void)
             break;
         case TEMP_SCREEN:
             state = handle_temp_screen(app_event);
+            break;
+        default:
+            ASSERT(false);
             break;
     }
 }
