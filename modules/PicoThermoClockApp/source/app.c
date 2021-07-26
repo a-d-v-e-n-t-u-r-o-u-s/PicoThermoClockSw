@@ -160,7 +160,7 @@ APP_event_t get_app_event(void)
 
 static APP_state_t handle_splash_screen_on(void)
 {
-    GPIO_write_pin(COLON_PORT, COLON_PIN, 1U);
+    GPIO_write_pin(GPIO_CHANNEL_COLON, true);
     set_to_display(8888u);
     tick = 5000u;
     return SPLASH_SCREEN_WAIT;
@@ -370,7 +370,7 @@ static APP_state_t handle_time_screen(APP_event_t event)
 {
     if(event == DOUBLE_PRESS)
     {
-        GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
+        GPIO_write_pin(GPIO_CHANNEL_COLON, false);
         return SET_YEAR_SCREEN;
     }
 
@@ -385,7 +385,7 @@ static APP_state_t handle_time_screen(APP_event_t event)
     DEBUG(DL_ERROR, "%d:%d:%d\n",hh, mm, DS1302_get_seconds());
     set_to_display(hh*100 + mm);
     tick = 1000U;
-    GPIO_toggle_pin(COLON_PORT, COLON_PIN);
+    GPIO_toggle_pin(GPIO_CHANNEL_COLON);
     timer5s++;
 
     if(timer5s > 20U)
@@ -404,7 +404,7 @@ static APP_state_t handle_temp_screen(APP_event_t event)
 {
     if(event == DOUBLE_PRESS)
     {
-        GPIO_write_pin(COLON_PORT, COLON_PIN, 0U);
+        GPIO_write_pin(GPIO_CHANNEL_COLON, false);
         return SET_YEAR_SCREEN;
     }
 
@@ -418,7 +418,7 @@ static APP_state_t handle_temp_screen(APP_event_t event)
     const bool is_round = ((temperature & ( 1 << 3u)) != 0);
     const bool is_negative = (temp < 0);
 
-    GPIO_write_pin(COLON_PORT, COLON_PIN, 0u);
+    GPIO_write_pin(GPIO_CHANNEL_COLON, false);
 
     if(is_round)
     {

@@ -23,6 +23,11 @@
 #ifndef PCB0001_H
 #define PCB0001_H
 
+#include "gpio.h"
+#include "ssd_mgr.h"
+#include "1wire_mgr.h"
+#include "input_mgr.h"
+#include <avr/pgmspace.h>
 /*!
  *
  * \addtogroup hardware
@@ -31,49 +36,33 @@
  */
 #define F_CPU                   (16000000UL)
 
-#define WIRE_DATA_PORT          (GPIO_PORTD)
-#define WIRE_DATA_PIN           (4U)
+#define GPIO_CHANNEL_COLON          (0U)
+#define GPIO_CHANNEL_DISPLAY1       (1U)
+#define GPIO_CHANNEL_DISPLAY2       (2U)
+#define GPIO_CHANNEL_DISPLAY3       (3U)
+#define GPIO_CHANNEL_DISPLAY0       (4U)
+#define GPIO_CHANNEL_SEGMENTG       (5U)
+#define GPIO_CHANNEL_SEGMENTC       (6U)
+#define GPIO_CHANNEL_SEGMENTD       (7U)
+#define GPIO_CHANNEL_SEGMENTE       (8U)
+#define GPIO_CHANNEL_SEGMENTA       (9U)
+#define GPIO_CHANNEL_SEGMENTF       (10U)
+#define GPIO_CHANNEL_SEGMENTB       (11U)
+#define GPIO_CHANNEL_INPUT_PLUS     (12U)
+#define GPIO_CHANNEL_INPUT_MINUS    (13U)
+#define GPIO_CHANNEL_1WIRE          (14U)
+#define GPIO_CHANNEL_RTC_CLK        (15U)
+#define GPIO_CHANNEL_RTC_IO         (16U)
+#define GPIO_CHANNEL_RTC_CE         (17U)
 
-#define DISPLAY3_PORT           (GPIO_PORTB)
-#define DISPLAY3_PIN            (3U)
-#define DISPLAY2_PORT           (GPIO_PORTB)
-#define DISPLAY2_PIN            (2U)
-#define DISPLAY1_PORT           (GPIO_PORTB)
-#define DISPLAY1_PIN            (1U)
-#define DISPLAY0_PORT           (GPIO_PORTB)
-#define DISPLAY0_PIN            (4U)
-
-#define SEGMENTA_PORT           (GPIO_PORTC)
-#define SEGMENTA_PIN            (3U)
-#define SEGMENTB_PORT           (GPIO_PORTC)
-#define SEGMENTB_PIN            (5U)
-#define SEGMENTC_PORT           (GPIO_PORTC)
-#define SEGMENTC_PIN            (0U)
-#define SEGMENTD_PORT           (GPIO_PORTC)
-#define SEGMENTD_PIN            (1U)
-#define SEGMENTE_PORT           (GPIO_PORTC)
-#define SEGMENTE_PIN            (2U)
-#define SEGMENTF_PORT           (GPIO_PORTC)
-#define SEGMENTF_PIN            (4U)
-#define SEGMENTG_PORT           (GPIO_PORTB)
-#define SEGMENTG_PIN            (5U)
-
-#define COLON_PORT              (GPIO_PORTB)
-#define COLON_PIN               (0U)
-
-#define RTC_CLK_PORT            (GPIO_PORTD)
-#define RTC_CLK_PIN             (5U)
-#define RTC_IO_PORT             (GPIO_PORTD)
-#define RTC_IO_PIN              (6U)
-#define RTC_CE_PORT             (GPIO_PORTD)
-#define RTC_CE_PIN              (7U)
+extern const GPIO_config_t gpio_config[18] PROGMEM;
+extern const SSD_MGR_config_t ssd_config PROGMEM;
+extern const uint8_t displays_config[4] PROGMEM;
+extern const WIRE_MGR_config_t wire_mgr_config PROGMEM;
+extern const uint8_t input_mgr_config[2] PROGMEM;
 
 #define INPUT_MINUS_ID          (0U)
-#define INPUT_MINUS_PORT        (GPIO_PORTD)
-#define INPUT_MINUS_PIN         (3U)
 #define INPUT_PLUS_ID           (1U)
-#define INPUT_PLUS_PORT         (GPIO_PORTD)
-#define INPUT_PLUS_PIN          (2U)
 /*@{*/
 
 /*@}*/
