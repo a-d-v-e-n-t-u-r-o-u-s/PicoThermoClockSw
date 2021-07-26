@@ -3,6 +3,7 @@
 /build*
 /.test*
 /.cache
+/.scannerwork
 /documentation
 cscope.out
 config-user.mk
