@@ -175,7 +175,7 @@ APP_event_t get_app_event(void)
         }
         else
         {
-            ; /* ignore rest of cases */
+            /* ignore rest of cases */
         }
 
 
@@ -233,7 +233,6 @@ static APP_state_t handle_set_year_screen(APP_event_t event)
         case DOUBLE_PRESS:
             ret = SET_MONTH_SCREEN;
             break;
-        case INVALID:
         default:
             break;
     }
@@ -259,7 +258,6 @@ static APP_state_t handle_set_month_screen(APP_event_t event)
         case DOUBLE_PRESS:
             ret = SET_DAY_SCREEN;
             break;
-        case INVALID:
         default:
             break;
     }
@@ -285,7 +283,6 @@ static APP_state_t handle_set_day_screen(APP_event_t event)
         case DOUBLE_PRESS:
             ret = SET_WEEKDAY_SCREEN;
             break;
-        case INVALID:
         default:
             break;
     }
@@ -311,7 +308,6 @@ static APP_state_t handle_set_weekday_screen(APP_event_t event)
         case DOUBLE_PRESS:
             ret = SET_TIME_SCREEN;
             break;
-        case INVALID:
         default:
             break;
     }
@@ -341,7 +337,6 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
             DS1302_set(&datetime);
             tick = 1000u;
             break;
-        case INVALID:
         default:
             break;
     }
@@ -400,7 +395,7 @@ static APP_state_t handle_temp_screen(APP_event_t event)
     }
 
     uint16_t temperature = WIRE_MGR_get_temperature();
-    int8_t temp = temperature >> 4u;
+    int8_t temp = (int8_t)(temperature >> 4u);
     const bool is_round = ((temperature & ( 1 << 3u)) != 0);
     const bool is_negative = (temp < 0);
 
