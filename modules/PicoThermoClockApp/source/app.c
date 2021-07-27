@@ -109,6 +109,42 @@ static void set_to_display(uint16_t value)
     }
 }
 
+static uint8_t increment_over_range(uint8_t type, uint8_t value)
+{
+    const uint8_t max = DS1302_get_range_maximum(type);
+    const uint8_t min = DS1302_get_range_minimum(type);
+    uint8_t tmp = value;
+
+    if(tmp == max)
+    {
+        tmp = min;
+    }
+    else
+    {
+        tmp++;
+    }
+
+    return tmp;
+}
+
+static uint8_t decrement_over_range(uint8_t type, uint8_t value)
+{
+    const uint8_t max = DS1302_get_range_maximum(type);
+    const uint8_t min = DS1302_get_range_minimum(type);
+    uint8_t tmp = value;
+
+    if(tmp == min)
+    {
+        tmp = max;
+    }
+    else
+    {
+        tmp--;
+    }
+
+    return tmp;
+}
+
 APP_event_t get_app_event(void)
 {
     APP_event_t ret = INVALID;
@@ -117,40 +153,43 @@ APP_event_t get_app_event(void)
     {
         DEBUG(DL_VERBOSE, "Ev: [%d] \n",new_input.event);
 
-        if(old_input.event == BUTTON_SHORT_PRESSED &&
-                new_input.event == BUTTON_SHORT_PRESSED)
+        if((old_input.event == BUTTON_SHORT_PRESSED) &&
+                (new_input.event == BUTTON_SHORT_PRESSED))
         {
             set_input_to_defaults(&new_input);
             ret = DOUBLE_PRESS;
         }
-        else if(old_input.id == INPUT_MINUS_ID &&
-                old_input.event == BUTTON_SHORT_PRESSED &&
-                new_input.id == INPUT_MINUS_ID &&
-
-                new_input.event == BUTTON_RELEASED)
+        else if((old_input.id == INPUT_MINUS_ID) &&
+                (old_input.event == BUTTON_SHORT_PRESSED) &&
+                (new_input.id == INPUT_MINUS_ID) &&
+                (new_input.event == BUTTON_RELEASED))
         {
             ret = MINUS_RELEASE;
         }
-        else if(old_input.id == INPUT_PLUS_ID &&
-                old_input.event == BUTTON_SHORT_PRESSED &&
-                new_input.id == INPUT_PLUS_ID &&
-                new_input.event == BUTTON_RELEASED)
+        else if((old_input.id == INPUT_PLUS_ID) &&
+                (old_input.event == BUTTON_SHORT_PRESSED) &&
+                (new_input.id == INPUT_PLUS_ID) &&
+                (new_input.event == BUTTON_RELEASED))
         {
             ret = PLUS_RELEASE;
+        }
+        else
+        {
+            ; /* ignore rest of cases */
         }
 
 
         old_input = new_input;
     }
 
-    if(new_input.id == INPUT_MINUS_ID &&
-            new_input.event == BUTTON_LONG_PRESSED)
+    if((new_input.id == INPUT_MINUS_ID) &&
+            (new_input.event == BUTTON_LONG_PRESSED))
     {
         ret = MINUS_LONG_PRESS;
     }
 
-    if(new_input.id == INPUT_PLUS_ID &&
-            new_input.event == BUTTON_LONG_PRESSED)
+    if((new_input.id == INPUT_PLUS_ID) &&
+            (new_input.event == BUTTON_LONG_PRESSED))
     {
         ret = PLUS_LONG_PRESS;
     }
@@ -185,20 +224,11 @@ static APP_state_t handle_set_year_screen(APP_event_t event)
     {
         case MINUS_LONG_PRESS:
         case MINUS_RELEASE:
-            if(datetime.year == 0U)
-            {
-                datetime.year = 99U;
-            }
-            else
-            {
-                datetime.year--;
-            }
+            datetime.year = decrement_over_range(DS1302_YEAR, datetime.year);
             break;
         case PLUS_LONG_PRESS:
         case PLUS_RELEASE:
-
-            datetime.year++;
-            datetime.year %=100u;
+            datetime.year = increment_over_range(DS1302_YEAR, datetime.year);
             break;
         case DOUBLE_PRESS:
             ret = SET_MONTH_SCREEN;
@@ -220,25 +250,11 @@ static APP_state_t handle_set_month_screen(APP_event_t event)
     {
         case MINUS_LONG_PRESS:
         case MINUS_RELEASE:
-            if(datetime.month == 1)
-            {
-                datetime.month = 12u;
-            }
-            else
-            {
-                datetime.month--;
-            }
+            datetime.month = decrement_over_range(DS1302_MONTH, datetime.month);
             break;
         case PLUS_LONG_PRESS:
         case PLUS_RELEASE:
-            if(datetime.month == 12)
-            {
-                datetime.month = 1;
-            }
-            else
-            {
-                datetime.month++;
-            }
+            datetime.month = increment_over_range(DS1302_MONTH, datetime.month);
             break;
         case DOUBLE_PRESS:
             ret = SET_DAY_SCREEN;
@@ -260,25 +276,11 @@ static APP_state_t handle_set_day_screen(APP_event_t event)
     {
         case MINUS_LONG_PRESS:
         case MINUS_RELEASE:
-            if(datetime.date == 1)
-            {
-                datetime.date = 30u;
-            }
-            else
-            {
-                datetime.date--;
-            }
+            datetime.date = decrement_over_range(DS1302_DATE, datetime.date);
             break;
         case PLUS_LONG_PRESS:
         case PLUS_RELEASE:
-            if(datetime.date == 30)
-            {
-                datetime.date = 1;
-            }
-            else
-            {
-                datetime.date++;
-            }
+            datetime.date = increment_over_range(DS1302_DATE, datetime.date);
             break;
         case DOUBLE_PRESS:
             ret = SET_WEEKDAY_SCREEN;
@@ -300,25 +302,11 @@ static APP_state_t handle_set_weekday_screen(APP_event_t event)
     {
         case MINUS_LONG_PRESS:
         case MINUS_RELEASE:
-            if(datetime.weekday == 1)
-            {
-                datetime.weekday= 7u;
-            }
-            else
-            {
-                datetime.weekday--;
-            }
+            datetime.weekday = decrement_over_range(DS1302_WEEKDAY, datetime.weekday);
             break;
         case PLUS_LONG_PRESS:
         case PLUS_RELEASE:
-            if(datetime.weekday == 7)
-            {
-                datetime.weekday = 1;
-            }
-            else
-            {
-                datetime.weekday++;
-            }
+            datetime.weekday = increment_over_range(DS1302_WEEKDAY, datetime.weekday);
             break;
         case DOUBLE_PRESS:
             ret = SET_TIME_SCREEN;
@@ -340,13 +328,11 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
     {
         case MINUS_LONG_PRESS:
         case MINUS_RELEASE:
-            datetime.hours++;
-            datetime.hours %= 24u;
+            datetime.hours = increment_over_range(DS1302_HOURS, datetime.hours);
             break;
         case PLUS_LONG_PRESS:
         case PLUS_RELEASE:
-            datetime.min++;
-            datetime.min %= 60u;
+            datetime.min = increment_over_range(DS1302_MINUTES, datetime.min);
             break;
         case DOUBLE_PRESS:
             ret = TIME_SCREEN;
