@@ -35,6 +35,20 @@
 #include <stdbool.h>
 #include "input_mgr.h"
 
+#define DISPLAY_SPLASH_VALUE        (8888u)
+
+#define STATE_DELAY_1S              (1000u)
+#define STATE_DELAY_5S              (5000u)
+
+#define YEAR_2000_VALUE             (2000u)
+
+#define LEFT_DISP1_IDX              (0u)
+#define LEFT_DISP2_IDX              (1U)
+#define LEFT_DISP3_IDX              (2u)
+#define LEFT_DISP4_IDX              (3u)
+
+#define TASK_PERIOD                 (100u)
+
 typedef enum
 {
     IDLE,
@@ -200,8 +214,8 @@ APP_event_t get_app_event(void)
 static APP_state_t handle_splash_screen_on(void)
 {
     GPIO_write_pin(GPIO_CHANNEL_COLON, true);
-    set_to_display(8888u);
-    tick = 5000u;
+    set_to_display(DISPLAY_SPLASH_VALUE);
+    tick = STATE_DELAY_5S;
     return SPLASH_SCREEN_WAIT;
 }
 
@@ -237,7 +251,7 @@ static APP_state_t handle_set_year_screen(APP_event_t event)
             break;
     }
 
-    set_to_display(datetime.year + 2000u);
+    set_to_display(datetime.year + YEAR_2000_VALUE);
     return ret;
 }
 
@@ -335,7 +349,7 @@ static APP_state_t handle_set_time_screen(APP_event_t event)
             datetime.secs = 0u;
             DS1302_set_write_protection(false);
             DS1302_set(&datetime);
-            tick = 1000u;
+            tick = STATE_DELAY_1S;
             break;
         default:
             break;
@@ -365,14 +379,14 @@ static APP_state_t handle_time_screen(APP_event_t event)
 
     DEBUG(DL_ERROR, "%d:%d:%d\n",hh, mm, DS1302_get_seconds());
     set_to_display(hh*100 + mm);
-    tick = 1000U;
+    tick = STATE_DELAY_1S;
     GPIO_toggle_pin(GPIO_CHANNEL_COLON);
     timer5s++;
 
     if(timer5s > 20U)
     {
         timer5s = 0u;
-        tick = 1000U;
+        tick = STATE_DELAY_1S;
         return TEMP_SCREEN;
     }
     else
@@ -407,28 +421,28 @@ static APP_state_t handle_temp_screen(APP_event_t event)
     }
 
     uint8_t temp_abs = is_negative ? -temp : temp;
-    SSD_MGR_display_set(&app_displays[0], SSD_CHAR_C);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], SSD_CHAR_C);
     uint8_t digit = get_digit(temp_abs, 0);
-    SSD_MGR_display_set(&app_displays[1], digit);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], digit);
     digit = get_digit(temp_abs, 1);
-    SSD_MGR_display_set(&app_displays[2], digit);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], digit);
 
     if(!is_negative)
     {
-        SSD_MGR_display_set(&app_displays[3], SSD_BLANK);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_BLANK);
     }
     else
     {
-        SSD_MGR_display_set(&app_displays[3], SSD_SYMBOL_MINUS);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_SYMBOL_MINUS);
     }
 
-    tick = 1000U;
+    tick = STATE_DELAY_1S;
     timer5s++;
 
     if(timer5s > 5U)
     {
         timer5s = 0;
-        tick = 1000u;
+        tick = STATE_DELAY_1S;
         return TIME_SCREEN;
     }
     else
@@ -487,7 +501,7 @@ static void app_main(void)
 
 void APP_initialize(SSD_MGR_displays_t *displays, uint8_t size)
 {
-    SYSTEM_register_task(app_main, 100u);
+    SYSTEM_register_task(app_main, TASK_PERIOD);
     SYSTEM_timer_register(callback);
     set_input_to_defaults(&old_input);
     old_state = SET_YEAR_SCREEN;
