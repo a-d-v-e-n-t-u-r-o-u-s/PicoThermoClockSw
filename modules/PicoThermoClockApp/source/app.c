@@ -408,33 +408,45 @@ static APP_state_t handle_temp_screen(APP_event_t event)
         return TEMP_SCREEN;
     }
 
-    uint16_t temperature = WIRE_MGR_get_temperature();
-    int8_t temp = (int8_t)(temperature >> 4u);
-    const bool is_round = ((temperature & ( 1 << 3u)) != 0);
-    const bool is_negative = (temp < 0);
+    uint16_t temperature;
 
-    GPIO_write_pin(GPIO_CHANNEL_COLON, false);
-
-    if(is_round)
+    if(WIRE_MGR_get_temperature(&temperature))
     {
-        temp++;
-    }
+        int8_t temp = (int8_t)(temperature >> 4u);
+        const bool is_round = ((temperature & ( 1 << 3u)) != 0);
+        const bool is_negative = (temp < 0);
 
-    uint8_t temp_abs = is_negative ? -temp : temp;
-    SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], SSD_CHAR_C);
-    uint8_t digit = get_digit(temp_abs, 0);
-    SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], digit);
-    digit = get_digit(temp_abs, 1);
-    SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], digit);
+        GPIO_write_pin(GPIO_CHANNEL_COLON, false);
 
-    if(!is_negative)
-    {
-        SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_BLANK);
+        if(is_round)
+        {
+            temp++;
+        }
+
+        uint8_t temp_abs = is_negative ? -temp : temp;
+        SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], SSD_CHAR_C);
+        uint8_t digit = get_digit(temp_abs, 0);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], digit);
+        digit = get_digit(temp_abs, 1);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], digit);
+
+        if(!is_negative)
+        {
+            SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_BLANK);
+        }
+        else
+        {
+            SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_SYMBOL_MINUS);
+        }
     }
     else
     {
-        SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_SYMBOL_MINUS);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_BLANK);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], SSD_CHAR_E);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], SSD_CHAR_r);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], SSD_CHAR_r);
     }
+
 
     tick = STATE_DELAY_1S;
     timer5s++;

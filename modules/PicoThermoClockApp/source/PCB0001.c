@@ -62,7 +62,8 @@ const uint8_t displays_config[] PROGMEM =
 const WIRE_MGR_config_t wire_mgr_config PROGMEM =
 {
     .is_crc = true,
-    .resolution = WIRE_12BIT_RESOLUTION,
+    .is_fake_allowed = true,
+    .resolution = WIRE_9BIT_RESOLUTION,
 };
 
 const uint8_t input_mgr_config[2] PROGMEM =
