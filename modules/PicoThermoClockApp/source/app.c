@@ -141,10 +141,49 @@ static uint8_t increment_over_range(uint8_t type, uint8_t value)
     return tmp;
 }
 
+static uint8_t increment_over_date_range(uint8_t value,
+        uint8_t year, uint8_t month)
+{
+    const uint8_t max = DS1302_get_date_range_maximum(year, month);
+    const uint8_t min = DS1302_get_range_minimum(DS1302_DATE);
+    uint8_t tmp = value;
+
+    if(tmp == max)
+    {
+        tmp = min;
+    }
+    else
+    {
+        tmp++;
+    }
+
+    return tmp;
+
+}
+
 static uint8_t decrement_over_range(uint8_t type, uint8_t value)
 {
     const uint8_t max = DS1302_get_range_maximum(type);
     const uint8_t min = DS1302_get_range_minimum(type);
+    uint8_t tmp = value;
+
+    if(tmp == min)
+    {
+        tmp = max;
+    }
+    else
+    {
+        tmp--;
+    }
+
+    return tmp;
+}
+
+static uint8_t decrement_over_date_range(uint8_t value,
+        uint8_t year, uint8_t month)
+{
+    const uint8_t max = DS1302_get_date_range_maximum(year, month);
+    const uint8_t min = DS1302_get_range_minimum(DS1302_DATE);
     uint8_t tmp = value;
 
     if(tmp == min)
@@ -288,11 +327,13 @@ static APP_state_t handle_set_day_screen(APP_event_t event)
     {
         case MINUS_LONG_PRESS:
         case MINUS_RELEASE:
-            datetime.date = decrement_over_range(DS1302_DATE, datetime.date);
+            datetime.date = decrement_over_date_range(datetime.date,
+                    datetime.year, datetime.month);
             break;
         case PLUS_LONG_PRESS:
         case PLUS_RELEASE:
-            datetime.date = increment_over_range(DS1302_DATE, datetime.date);
+            datetime.date = increment_over_date_range(datetime.date,
+                    datetime.year, datetime.month);
             break;
         case DOUBLE_PRESS:
             ret = SET_WEEKDAY_SCREEN;
