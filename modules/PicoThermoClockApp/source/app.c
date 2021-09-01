@@ -49,16 +49,18 @@
 
 #define TASK_PERIOD                 (100u)
 
+#define EPOCH_YEAR                  (70U)
+#define EPOCH_MONTH                 (1U)
+#define EPOCH_DAY                   (1U)
+#define EPOCH_WEEKDAY               (4U)
+
 typedef enum
 {
     IDLE,
     SPLASH_SCREEN_ON,
     SPLASH_SCREEN_WAIT,
-    SET_YEAR_SCREEN,
-    SET_MONTH_SCREEN,
-    SET_DAY_SCREEN,
-    SET_WEEKDAY_SCREEN,
-    SET_TIME_SCREEN,
+    SET_HOURS_SCREEN,
+    SET_MINUTES_SCREEN,
     TIME_SCREEN,
     TEMP_SCREEN,
 } APP_state_t;
@@ -141,26 +143,6 @@ static uint8_t increment_over_range(uint8_t type, uint8_t value)
     return tmp;
 }
 
-static uint8_t increment_over_date_range(uint8_t value,
-        uint8_t year, uint8_t month)
-{
-    const uint8_t max = DS1302_get_date_range_maximum(year, month);
-    const uint8_t min = DS1302_get_range_minimum(DS1302_DATE);
-    uint8_t tmp = value;
-
-    if(tmp == max)
-    {
-        tmp = min;
-    }
-    else
-    {
-        tmp++;
-    }
-
-    return tmp;
-
-}
-
 static uint8_t decrement_over_range(uint8_t type, uint8_t value)
 {
     const uint8_t max = DS1302_get_range_maximum(type);
@@ -179,24 +161,6 @@ static uint8_t decrement_over_range(uint8_t type, uint8_t value)
     return tmp;
 }
 
-static uint8_t decrement_over_date_range(uint8_t value,
-        uint8_t year, uint8_t month)
-{
-    const uint8_t max = DS1302_get_date_range_maximum(year, month);
-    const uint8_t min = DS1302_get_range_minimum(DS1302_DATE);
-    uint8_t tmp = value;
-
-    if(tmp == min)
-    {
-        tmp = max;
-    }
-    else
-    {
-        tmp--;
-    }
-
-    return tmp;
-}
 
 APP_event_t get_app_event(void)
 {
@@ -269,127 +233,74 @@ static APP_state_t handle_splash_screen_wait(void)
     return TIME_SCREEN;
 }
 
-static APP_state_t handle_set_year_screen(APP_event_t event)
+static APP_state_t handle_set_hours_screen(APP_event_t event)
 {
-    APP_state_t ret = SET_YEAR_SCREEN;
+    APP_state_t ret = SET_HOURS_SCREEN;
+
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], true);
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], true);
 
     switch(event)
     {
         case MINUS_LONG_PRESS:
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
         case MINUS_RELEASE:
-            datetime.year = decrement_over_range(DS1302_YEAR, datetime.year);
+            datetime.hours = decrement_over_range(DS1302_HOURS, datetime.hours);
             break;
         case PLUS_LONG_PRESS:
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
         case PLUS_RELEASE:
-            datetime.year = increment_over_range(DS1302_YEAR, datetime.year);
-            break;
-        case DOUBLE_PRESS:
-            ret = SET_MONTH_SCREEN;
-            break;
-        default:
-            break;
-    }
-
-    set_to_display(datetime.year + YEAR_2000_VALUE);
-    return ret;
-}
-
-static APP_state_t handle_set_month_screen(APP_event_t event)
-{
-    APP_state_t ret = SET_MONTH_SCREEN;
-
-    switch(event)
-    {
-        case MINUS_LONG_PRESS:
-        case MINUS_RELEASE:
-            datetime.month = decrement_over_range(DS1302_MONTH, datetime.month);
-            break;
-        case PLUS_LONG_PRESS:
-        case PLUS_RELEASE:
-            datetime.month = increment_over_range(DS1302_MONTH, datetime.month);
-            break;
-        case DOUBLE_PRESS:
-            ret = SET_DAY_SCREEN;
-            break;
-        default:
-            break;
-    }
-
-    set_to_display(datetime.month);
-    return ret;
-}
-
-static APP_state_t handle_set_day_screen(APP_event_t event)
-{
-    APP_state_t ret = SET_DAY_SCREEN;
-
-    switch(event)
-    {
-        case MINUS_LONG_PRESS:
-        case MINUS_RELEASE:
-            datetime.date = decrement_over_date_range(datetime.date,
-                    datetime.year, datetime.month);
-            break;
-        case PLUS_LONG_PRESS:
-        case PLUS_RELEASE:
-            datetime.date = increment_over_date_range(datetime.date,
-                    datetime.year, datetime.month);
-            break;
-        case DOUBLE_PRESS:
-            ret = SET_WEEKDAY_SCREEN;
-            break;
-        default:
-            break;
-    }
-
-    set_to_display(datetime.date);
-    return ret;
-}
-
-static APP_state_t handle_set_weekday_screen(APP_event_t event)
-{
-    APP_state_t ret = SET_WEEKDAY_SCREEN;
-
-    switch(event)
-    {
-        case MINUS_LONG_PRESS:
-        case MINUS_RELEASE:
-            datetime.weekday = decrement_over_range(DS1302_WEEKDAY, datetime.weekday);
-            break;
-        case PLUS_LONG_PRESS:
-        case PLUS_RELEASE:
-            datetime.weekday = increment_over_range(DS1302_WEEKDAY, datetime.weekday);
-            break;
-        case DOUBLE_PRESS:
-            ret = SET_TIME_SCREEN;
-            break;
-        default:
-            break;
-    }
-
-    set_to_display(datetime.weekday);
-    return ret;
-}
-
-static APP_state_t handle_set_time_screen(APP_event_t event)
-{
-    APP_state_t ret = SET_TIME_SCREEN;
-
-    switch(event)
-    {
-        case MINUS_LONG_PRESS:
-        case MINUS_RELEASE:
             datetime.hours = increment_over_range(DS1302_HOURS, datetime.hours);
             break;
+        case DOUBLE_PRESS:
+            ret = SET_MINUTES_SCREEN;
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            tick = STATE_DELAY_1S;
+            break;
+        default:
+            break;
+    }
+
+    uint16_t const to_display = datetime.hours*100U + datetime.min;
+    set_to_display(to_display);
+    return ret;
+}
+
+static APP_state_t handle_set_minutes_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_MINUTES_SCREEN;
+
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], true);
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], true);
+
+    switch(event)
+    {
+        case MINUS_LONG_PRESS:
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+        case MINUS_RELEASE:
+            datetime.min = decrement_over_range(DS1302_MINUTES, datetime.min);
+            break;
         case PLUS_LONG_PRESS:
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
         case PLUS_RELEASE:
             datetime.min = increment_over_range(DS1302_MINUTES, datetime.min);
             break;
         case DOUBLE_PRESS:
             ret = TIME_SCREEN;
-            datetime.secs = 0u;
+            datetime.secs = 0U;
+            datetime.year = EPOCH_YEAR;
+            datetime.month = EPOCH_MONTH;
+            datetime.date = EPOCH_DAY;
+            datetime.weekday = EPOCH_WEEKDAY;
             DS1302_set_write_protection(false);
             DS1302_set(&datetime);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
             tick = STATE_DELAY_1S;
             break;
         default:
@@ -407,7 +318,7 @@ static APP_state_t handle_time_screen(APP_event_t event)
     if(event == DOUBLE_PRESS)
     {
         GPIO_write_pin(GPIO_CHANNEL_COLON, false);
-        return SET_YEAR_SCREEN;
+        return SET_HOURS_SCREEN;
     }
 
     if(tick != 0)
@@ -441,7 +352,7 @@ static APP_state_t handle_temp_screen(APP_event_t event)
     if(event == DOUBLE_PRESS)
     {
         GPIO_write_pin(GPIO_CHANNEL_COLON, false);
-        return SET_YEAR_SCREEN;
+        return SET_HOURS_SCREEN;
     }
 
     if(tick != 0)
@@ -525,20 +436,11 @@ static void app_main(void)
         case SPLASH_SCREEN_WAIT:
             state = handle_splash_screen_wait();
             break;
-        case SET_YEAR_SCREEN:
-            state = handle_set_year_screen(app_event);
+        case SET_HOURS_SCREEN:
+            state = handle_set_hours_screen(app_event);
             break;
-        case SET_MONTH_SCREEN:
-            state = handle_set_month_screen(app_event);
-            break;
-        case SET_DAY_SCREEN:
-            state = handle_set_day_screen(app_event);
-            break;
-        case SET_WEEKDAY_SCREEN:
-            state = handle_set_weekday_screen(app_event);
-            break;
-        case SET_TIME_SCREEN:
-            state = handle_set_time_screen(app_event);
+        case SET_MINUTES_SCREEN:
+            state = handle_set_minutes_screen(app_event);
             break;
         case TIME_SCREEN:
             state = handle_time_screen(app_event);
@@ -557,7 +459,7 @@ void APP_initialize(SSD_MGR_displays_t *displays, uint8_t size)
     SYSTEM_register_task(app_main, TASK_PERIOD);
     SYSTEM_timer_register(callback);
     set_input_to_defaults(&old_input);
-    old_state = SET_YEAR_SCREEN;
+    old_state = SET_HOURS_SCREEN;
     app_displays = displays;
     app_displays_size = size;
 }
