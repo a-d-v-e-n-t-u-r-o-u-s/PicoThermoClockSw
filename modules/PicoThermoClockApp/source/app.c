@@ -245,12 +245,14 @@ static APP_state_t handle_set_hours_screen(APP_event_t event)
         case MINUS_LONG_PRESS:
             SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
             SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            /* fallthrough */
         case MINUS_RELEASE:
             datetime.hours = decrement_over_range(DS1302_HOURS, datetime.hours);
             break;
         case PLUS_LONG_PRESS:
             SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
             SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            /* fallthrough */
         case PLUS_RELEASE:
             datetime.hours = increment_over_range(DS1302_HOURS, datetime.hours);
             break;
@@ -264,7 +266,7 @@ static APP_state_t handle_set_hours_screen(APP_event_t event)
             break;
     }
 
-    uint16_t const to_display = datetime.hours*100U + datetime.min;
+    uint16_t const to_display = (datetime.hours*100U) + datetime.min;
     set_to_display(to_display);
     return ret;
 }
@@ -281,12 +283,14 @@ static APP_state_t handle_set_minutes_screen(APP_event_t event)
         case MINUS_LONG_PRESS:
             SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
             SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+            /* fallthrough */
         case MINUS_RELEASE:
             datetime.min = decrement_over_range(DS1302_MINUTES, datetime.min);
             break;
         case PLUS_LONG_PRESS:
             SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
             SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+            /* fallthrough */
         case PLUS_RELEASE:
             datetime.min = increment_over_range(DS1302_MINUTES, datetime.min);
             break;
