@@ -59,6 +59,8 @@ typedef enum
     IDLE,
     SPLASH_SCREEN_ON,
     SPLASH_SCREEN_WAIT,
+    SET_TIME_MODE_SCREEN,
+    SET_AM_PM_SCREEN,
     SET_HOURS_SCREEN,
     SET_MINUTES_SCREEN,
     TIME_SCREEN,
@@ -84,6 +86,19 @@ static SSD_MGR_displays_t *app_displays;
 static uint8_t app_displays_size;
 static uint8_t timer5s;
 static DS1302_datetime_t datetime;
+
+static const DS1302_datetime_t default_datetime =
+{
+    .year = EPOCH_YEAR,
+    .month = EPOCH_MONTH,
+    .date = EPOCH_DAY,
+    .weekday = EPOCH_WEEKDAY,
+    .hours = 12U,
+    .min = 0U,
+    .secs = 0U,
+    .is_12h_mode = false,
+    .is_pm = false,
+};
 
 static uint8_t get_digit(uint16_t value, uint8_t position)
 {
@@ -233,6 +248,50 @@ static APP_state_t handle_splash_screen_wait(void)
     return TIME_SCREEN;
 }
 
+static APP_state_t handle_set_time_mode_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_TIME_MODE_SCREEN;
+
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], true);
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], true);
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], true);
+
+    switch(event)
+    {
+        case MINUS_RELEASE:
+        case PLUS_RELEASE:
+            if(!datetime.is_12h_mode)
+            {
+                datetime.is_12h_mode = true;
+            }
+            else
+            {
+                datetime.is_12h_mode = false;
+            }
+            break;
+        case DOUBLE_PRESS:
+            ret = datetime.is_12h_mode ? SET_AM_PM_SCREEN : SET_HOURS_SCREEN;
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            tick = STATE_DELAY_1S;
+            break;
+        case MINUS_LONG_PRESS:
+        case PLUS_LONG_PRESS:
+        default:
+            break;
+    }
+
+    const uint8_t format = (datetime.is_12h_mode) ? 12U : 24U;
+
+    SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_BLANK);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], get_digit(format,1U));
+    SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], get_digit(format,0U));
+    SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], SSD_CHAR_h);
+
+    return ret;
+}
+
 static APP_state_t handle_set_hours_screen(APP_event_t event)
 {
     APP_state_t ret = SET_HOURS_SCREEN;
@@ -247,14 +306,22 @@ static APP_state_t handle_set_hours_screen(APP_event_t event)
             SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
             /* fallthrough */
         case MINUS_RELEASE:
-            datetime.hours = decrement_over_range(DS1302_HOURS, datetime.hours);
+            {
+                const uint8_t type =
+                    (datetime.is_12h_mode) ? DS1302_HOURS_12H : DS1302_HOURS_24H;
+                datetime.hours = decrement_over_range(type, datetime.hours);
+            }
             break;
         case PLUS_LONG_PRESS:
             SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
             SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
             /* fallthrough */
         case PLUS_RELEASE:
-            datetime.hours = increment_over_range(DS1302_HOURS, datetime.hours);
+            {
+                const uint8_t type =
+                    (datetime.is_12h_mode) ? DS1302_HOURS_12H : DS1302_HOURS_24H;
+                datetime.hours = increment_over_range(type, datetime.hours);
+            }
             break;
         case DOUBLE_PRESS:
             ret = SET_MINUTES_SCREEN;
@@ -268,6 +335,49 @@ static APP_state_t handle_set_hours_screen(APP_event_t event)
 
     uint16_t const to_display = (datetime.hours*100U) + datetime.min;
     set_to_display(to_display);
+    return ret;
+}
+
+static APP_state_t handle_set_am_pm_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_AM_PM_SCREEN;
+
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], true);
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], true);
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], true);
+
+    switch(event)
+    {
+        case MINUS_RELEASE:
+        case PLUS_RELEASE:
+            if(!datetime.is_pm)
+            {
+                datetime.is_pm = true;
+            }
+            else
+            {
+                datetime.is_pm = false;
+            }
+            break;
+        case DOUBLE_PRESS:
+            ret = SET_HOURS_SCREEN;
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            tick = STATE_DELAY_1S;
+            break;
+        case MINUS_LONG_PRESS:
+        case PLUS_LONG_PRESS:
+        default:
+            break;
+    }
+
+    SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_BLANK);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], SSD_BLANK);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], SSD_BLANK);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX],
+            datetime.is_pm ? SSD_CHAR_P : SSD_CHAR_A);
+
     return ret;
 }
 
@@ -296,11 +406,7 @@ static APP_state_t handle_set_minutes_screen(APP_event_t event)
             break;
         case DOUBLE_PRESS:
             ret = TIME_SCREEN;
-            datetime.secs = 0U;
-            datetime.year = EPOCH_YEAR;
-            datetime.month = EPOCH_MONTH;
-            datetime.date = EPOCH_DAY;
-            datetime.weekday = EPOCH_WEEKDAY;
+            DEBUG(DL_ERROR, "%d:%d:%d\n",datetime.hours, datetime.min, datetime.secs);
             DS1302_set_write_protection(false);
             DS1302_set(&datetime);
             SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
@@ -322,7 +428,8 @@ static APP_state_t handle_time_screen(APP_event_t event)
     if(event == DOUBLE_PRESS)
     {
         GPIO_write_pin(GPIO_CHANNEL_COLON, false);
-        return SET_HOURS_SCREEN;
+        datetime = default_datetime;
+        return SET_TIME_MODE_SCREEN;
     }
 
     if(tick != 0)
@@ -331,9 +438,9 @@ static APP_state_t handle_time_screen(APP_event_t event)
     }
 
     uint8_t mm = DS1302_get_minutes();
-    uint8_t hh = DS1302_get_hours();
+    uint8_t hh = DS1302_get_hours(datetime.is_12h_mode);
 
-    DEBUG(DL_ERROR, "%d:%d:%d\n",hh, mm, DS1302_get_seconds());
+    //DEBUG(DL_ERROR, "%d:%d:%d\n",hh, mm, DS1302_get_seconds());
     set_to_display(hh*100 + mm);
     tick = STATE_DELAY_1S;
     GPIO_toggle_pin(GPIO_CHANNEL_COLON);
@@ -356,7 +463,8 @@ static APP_state_t handle_temp_screen(APP_event_t event)
     if(event == DOUBLE_PRESS)
     {
         GPIO_write_pin(GPIO_CHANNEL_COLON, false);
-        return SET_HOURS_SCREEN;
+        datetime = default_datetime;
+        return SET_TIME_MODE_SCREEN;
     }
 
     if(tick != 0)
@@ -440,8 +548,14 @@ static void app_main(void)
         case SPLASH_SCREEN_WAIT:
             state = handle_splash_screen_wait();
             break;
+        case SET_TIME_MODE_SCREEN:
+            state = handle_set_time_mode_screen(app_event);
+            break;
         case SET_HOURS_SCREEN:
             state = handle_set_hours_screen(app_event);
+            break;
+        case SET_AM_PM_SCREEN:
+            state = handle_set_am_pm_screen(app_event);
             break;
         case SET_MINUTES_SCREEN:
             state = handle_set_minutes_screen(app_event);
@@ -463,7 +577,7 @@ void APP_initialize(SSD_MGR_displays_t *displays, uint8_t size)
     SYSTEM_register_task(app_main, TASK_PERIOD);
     SYSTEM_timer_register(callback);
     set_input_to_defaults(&old_input);
-    old_state = SET_HOURS_SCREEN;
+    old_state = SET_TIME_MODE_SCREEN;
     app_displays = displays;
     app_displays_size = size;
 }
