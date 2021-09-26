@@ -80,12 +80,13 @@ int main(void)
 
     SYSTEM_init();
 
-    for(uint8_t i = 0u; i < ARRAY_SIZE(displays); i++)
+    const uint8_t displays_size = (uint8_t)(sizeof(displays)/sizeof(displays[0]));
+    for(uint8_t i = 0U; i < displays_size; i++)
     {
         SSD_MGR_display_create(&displays[i], pgm_read_byte(&displays_config[i]));
     }
 
-    APP_initialize(displays, ARRAY_SIZE(displays));
+    APP_initialize(displays, displays_size);
 
     DEBUG(DL_INFO, "%s", "********************************\n");
     DEBUG(DL_INFO, "%s", "******* Mini Thermometer *******\n");
