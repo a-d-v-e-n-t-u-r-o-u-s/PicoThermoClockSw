@@ -276,8 +276,6 @@ static APP_state_t handle_set_time_mode_screen(APP_event_t event)
             SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
             tick = STATE_DELAY_1S;
             break;
-        case MINUS_LONG_PRESS:
-        case PLUS_LONG_PRESS:
         default:
             break;
     }
@@ -366,8 +364,6 @@ static APP_state_t handle_set_am_pm_screen(APP_event_t event)
             SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
             tick = STATE_DELAY_1S;
             break;
-        case MINUS_LONG_PRESS:
-        case PLUS_LONG_PRESS:
         default:
             break;
     }
@@ -440,7 +436,6 @@ static APP_state_t handle_time_screen(APP_event_t event)
     uint8_t mm = DS1302_get_minutes();
     uint8_t hh = DS1302_get_hours(datetime.is_12h_mode);
 
-    //DEBUG(DL_ERROR, "%d:%d:%d\n",hh, mm, DS1302_get_seconds());
     set_to_display(hh*100 + mm);
     tick = STATE_DELAY_1S;
     GPIO_toggle_pin(GPIO_CHANNEL_COLON);
@@ -476,7 +471,7 @@ static APP_state_t handle_temp_screen(APP_event_t event)
 
     if(WIRE_MGR_get_temperature(&temperature))
     {
-        int8_t temp = (int8_t)(temperature >> 4u);
+        int8_t temp = (int8_t)((uint8_t)(temperature >> 4U));
         const bool is_round = ((temperature & ( 1 << 3u)) != 0);
         const bool is_negative = (temp < 0);
 
