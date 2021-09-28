@@ -32,6 +32,7 @@
 #include "debug.h"
 #include "ds1302.h"
 #include <util/delay.h>
+#include <avr/eeprom.h>
 #include <stdbool.h>
 #include "input_mgr.h"
 
@@ -54,11 +55,19 @@
 #define EPOCH_DAY                   (1U)
 #define EPOCH_WEEKDAY               (4U)
 
+#define FAHRENHEIT_NUMERATOR        (9U)
+#define FAHRENHEIT_DENOMINATOR      (5U)
+#define FAHRENHEIT_OFFSET           (32)
+
+#define MIN_TEMPERATURE             (-200)
+#define MAX_TEMPERATURE             (200)
+
 typedef enum
 {
     IDLE,
     SPLASH_SCREEN_ON,
     SPLASH_SCREEN_WAIT,
+    SET_TEMP_MODE_SCREEN,
     SET_TIME_MODE_SCREEN,
     SET_AM_PM_SCREEN,
     SET_HOURS_SCREEN,
@@ -77,6 +86,12 @@ typedef enum
     DOUBLE_PRESS,
 } APP_event_t;
 
+typedef struct
+{
+    uint8_t numerator;
+    uint8_t denominator;
+} APP_fraction_t;
+
 static uint32_t tick;
 static APP_state_t state;
 static APP_state_t old_state;
@@ -86,6 +101,14 @@ static SSD_MGR_displays_t *app_displays;
 static uint8_t app_displays_size;
 static uint8_t timer5s;
 static DS1302_datetime_t datetime;
+static uint8_t EEMEM is_fahrenheit_eeprom = false;
+static bool is_fahrenheit;
+
+static const APP_fraction_t fahrenheit_conversion =
+{
+    .numerator = 9U,
+    .denominator = 5U
+};
 
 static const DS1302_datetime_t default_datetime =
 {
@@ -99,6 +122,19 @@ static const DS1302_datetime_t default_datetime =
     .is_12h_mode = false,
     .is_pm = false,
 };
+
+static inline bool is_temperature_in_range(int16_t temperature, uint8_t scaling_factor)
+{
+    const int16_t min = MIN_TEMPERATURE*scaling_factor;
+    const int16_t max = MAX_TEMPERATURE*scaling_factor;
+
+    if((temperature >= min) && (temperature <= max))
+    {
+        return true;
+    }
+
+    return false;
+}
 
 static uint8_t get_digit(uint16_t value, uint8_t position)
 {
@@ -244,8 +280,60 @@ static APP_state_t handle_splash_screen_wait(void)
         return SPLASH_SCREEN_WAIT;
     }
 
+    uint8_t tmp = eeprom_read_byte(&is_fahrenheit_eeprom);
+
     DS1302_get(&datetime);
+
+    if(tmp != 0U && tmp != 1U)
+    {
+        return SET_TEMP_MODE_SCREEN;
+    }
+
+    is_fahrenheit = (bool)tmp;
     return TIME_SCREEN;
+}
+
+static APP_state_t handle_set_temp_mode_screen(APP_event_t event)
+{
+    APP_state_t ret = SET_TEMP_MODE_SCREEN;
+
+    GPIO_write_pin(GPIO_CHANNEL_COLON, false);
+
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], true);
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], true);
+    SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], true);
+
+    switch(event)
+    {
+        case MINUS_RELEASE:
+        case PLUS_RELEASE:
+            if(!is_fahrenheit)
+            {
+                is_fahrenheit = true;
+            }
+            else
+            {
+                is_fahrenheit = false;
+            }
+            break;
+        case DOUBLE_PRESS:
+            eeprom_write_byte(&is_fahrenheit_eeprom, (uint8_t)is_fahrenheit);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            tick = STATE_DELAY_1S;
+            ret =  SET_TIME_MODE_SCREEN;
+            break;
+        default:
+            break;
+    }
+
+    SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_BLANK);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], is_fahrenheit ? SSD_DIGIT_3 : SSD_BLANK);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], is_fahrenheit ? SSD_DIGIT_2 : SSD_DIGIT_0);
+    SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], is_fahrenheit ? SSD_CHAR_F : SSD_CHAR_C);
+
+    return ret;
 }
 
 static APP_state_t handle_set_time_mode_screen(APP_event_t event)
@@ -425,7 +513,7 @@ static APP_state_t handle_time_screen(APP_event_t event)
     {
         GPIO_write_pin(GPIO_CHANNEL_COLON, false);
         datetime = default_datetime;
-        return SET_TIME_MODE_SCREEN;
+        return SET_TEMP_MODE_SCREEN;
     }
 
     if(tick != 0)
@@ -459,7 +547,7 @@ static APP_state_t handle_temp_screen(APP_event_t event)
     {
         GPIO_write_pin(GPIO_CHANNEL_COLON, false);
         datetime = default_datetime;
-        return SET_TIME_MODE_SCREEN;
+        return SET_TEMP_MODE_SCREEN;
     }
 
     if(tick != 0)
@@ -467,33 +555,44 @@ static APP_state_t handle_temp_screen(APP_event_t event)
         return TEMP_SCREEN;
     }
 
-    uint16_t temperature;
+    int16_t temperature;
+    const uint8_t scaling_factor = (1U << 4U);
 
-    if(WIRE_MGR_get_temperature(&temperature))
+    if(WIRE_MGR_get_temperature(&temperature) &&
+            is_temperature_in_range(temperature, scaling_factor))
     {
-        int8_t temp = (int8_t)((uint8_t)(temperature >> 4U));
-        const bool is_round = ((temperature & ( 1 << 3u)) != 0);
-        const bool is_negative = (temp < 0);
+        const uint8_t accuracy = scaling_factor/2U;
+        int16_t temperature_converted = temperature;
+
+        if(is_fahrenheit)
+        {
+            const uint8_t num = FAHRENHEIT_NUMERATOR;
+            const uint8_t denom = FAHRENHEIT_DENOMINATOR;
+
+            temperature_converted =
+                (num*temperature + scaling_factor*denom*FAHRENHEIT_OFFSET)/denom;
+        }
+
+        const bool is_negative = (temperature_converted < 0);
+
+        int16_t temperature_rounded = is_negative ?
+            (temperature_converted - accuracy) : (temperature_converted + accuracy);
+        int16_t temperature_renormalized = (temperature_rounded/scaling_factor);
 
         GPIO_write_pin(GPIO_CHANNEL_COLON, false);
 
-        if(is_round)
-        {
-            temp++;
-        }
+        uint16_t temp_abs = is_negative ?
+            -temperature_renormalized : temperature_renormalized;
 
-        uint8_t temp_abs = is_negative ? -temp : temp;
-        SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], SSD_CHAR_C);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], is_fahrenheit ? SSD_CHAR_F: SSD_CHAR_C);
         uint8_t digit = get_digit(temp_abs, 0);
         SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], digit);
         digit = get_digit(temp_abs, 1);
         SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], digit);
+        digit = get_digit(temp_abs, 2);
+        SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], digit);
 
-        if(!is_negative)
-        {
-            SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_BLANK);
-        }
-        else
+        if(is_negative)
         {
             SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], SSD_SYMBOL_MINUS);
         }
@@ -516,10 +615,8 @@ static APP_state_t handle_temp_screen(APP_event_t event)
         tick = STATE_DELAY_1S;
         return TIME_SCREEN;
     }
-    else
-    {
-        return TEMP_SCREEN;
-    }
+
+    return TEMP_SCREEN;
 }
 
 static void app_main(void)
@@ -542,6 +639,9 @@ static void app_main(void)
             break;
         case SPLASH_SCREEN_WAIT:
             state = handle_splash_screen_wait();
+            break;
+        case SET_TEMP_MODE_SCREEN:
+            state = handle_set_temp_mode_screen(app_event);
             break;
         case SET_TIME_MODE_SCREEN:
             state = handle_set_time_mode_screen(app_event);
