@@ -86,12 +86,6 @@ typedef enum
     DOUBLE_PRESS,
 } APP_event_t;
 
-typedef struct
-{
-    uint8_t numerator;
-    uint8_t denominator;
-} APP_fraction_t;
-
 static uint32_t tick;
 static APP_state_t state;
 static APP_state_t old_state;
@@ -103,12 +97,6 @@ static uint8_t timer5s;
 static DS1302_datetime_t datetime;
 static uint8_t EEMEM is_fahrenheit_eeprom = false;
 static bool is_fahrenheit;
-
-static const APP_fraction_t fahrenheit_conversion =
-{
-    .numerator = 9U,
-    .denominator = 5U
-};
 
 static const DS1302_datetime_t default_datetime =
 {
@@ -307,14 +295,7 @@ static APP_state_t handle_set_temp_mode_screen(APP_event_t event)
     {
         case MINUS_RELEASE:
         case PLUS_RELEASE:
-            if(!is_fahrenheit)
-            {
-                is_fahrenheit = true;
-            }
-            else
-            {
-                is_fahrenheit = false;
-            }
+            is_fahrenheit = !is_fahrenheit;
             break;
         case DOUBLE_PRESS:
             eeprom_write_byte(&is_fahrenheit_eeprom, (uint8_t)is_fahrenheit);
@@ -348,14 +329,7 @@ static APP_state_t handle_set_time_mode_screen(APP_event_t event)
     {
         case MINUS_RELEASE:
         case PLUS_RELEASE:
-            if(!datetime.is_12h_mode)
-            {
-                datetime.is_12h_mode = true;
-            }
-            else
-            {
-                datetime.is_12h_mode = false;
-            }
+            datetime.is_12h_mode = !datetime.is_12h_mode;
             break;
         case DOUBLE_PRESS:
             ret = datetime.is_12h_mode ? SET_AM_PM_SCREEN : SET_HOURS_SCREEN;
@@ -436,14 +410,7 @@ static APP_state_t handle_set_am_pm_screen(APP_event_t event)
     {
         case MINUS_RELEASE:
         case PLUS_RELEASE:
-            if(!datetime.is_pm)
-            {
-                datetime.is_pm = true;
-            }
-            else
-            {
-                datetime.is_pm = false;
-            }
+            datetime.is_pm = !datetime.is_pm;
             break;
         case DOUBLE_PRESS:
             ret = SET_HOURS_SCREEN;
@@ -570,7 +537,7 @@ static APP_state_t handle_temp_screen(APP_event_t event)
             const uint8_t denom = FAHRENHEIT_DENOMINATOR;
 
             temperature_converted =
-                (num*temperature + scaling_factor*denom*FAHRENHEIT_OFFSET)/denom;
+                ((num*temperature) + (scaling_factor*denom*FAHRENHEIT_OFFSET))/denom;
         }
 
         const bool is_negative = (temperature_converted < 0);
