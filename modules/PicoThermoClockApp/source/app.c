@@ -182,6 +182,14 @@ static uint8_t increment_over_range(uint8_t type, uint8_t value)
     return tmp;
 }
 
+static void set_blinking(uint8_t start, uint8_t end, bool value)
+{
+    for(uint8_t i = start; i < end; i++)
+    {
+        SSD_MGR_display_blink(&app_displays[i], value);
+    }
+}
+
 static uint8_t decrement_over_range(uint8_t type, uint8_t value)
 {
     const uint8_t max = DS1302_get_range_maximum(type);
@@ -272,7 +280,7 @@ static APP_state_t handle_splash_screen_wait(void)
 
     DS1302_get(&datetime);
 
-    if(tmp != 0U && tmp != 1U)
+    if((tmp != 0U) && (tmp != 1U))
     {
         return SET_TEMP_MODE_SCREEN;
     }
@@ -287,9 +295,7 @@ static APP_state_t handle_set_temp_mode_screen(APP_event_t event)
 
     GPIO_write_pin(GPIO_CHANNEL_COLON, false);
 
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], true);
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], true);
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], true);
+    set_blinking(LEFT_DISP1_IDX, LEFT_DISP3_IDX, true);
 
     switch(event)
     {
@@ -299,9 +305,7 @@ static APP_state_t handle_set_temp_mode_screen(APP_event_t event)
             break;
         case DOUBLE_PRESS:
             eeprom_write_byte(&is_fahrenheit_eeprom, (uint8_t)is_fahrenheit);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            set_blinking(LEFT_DISP1_IDX, LEFT_DISP3_IDX, false);
             tick = STATE_DELAY_1S;
             ret =  SET_TIME_MODE_SCREEN;
             break;
@@ -321,9 +325,7 @@ static APP_state_t handle_set_time_mode_screen(APP_event_t event)
 {
     APP_state_t ret = SET_TIME_MODE_SCREEN;
 
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], true);
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], true);
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], true);
+    set_blinking(LEFT_DISP1_IDX, LEFT_DISP3_IDX, true);
 
     switch(event)
     {
@@ -333,9 +335,7 @@ static APP_state_t handle_set_time_mode_screen(APP_event_t event)
             break;
         case DOUBLE_PRESS:
             ret = datetime.is_12h_mode ? SET_AM_PM_SCREEN : SET_HOURS_SCREEN;
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            set_blinking(LEFT_DISP1_IDX, LEFT_DISP3_IDX, false);
             tick = STATE_DELAY_1S;
             break;
         default:
@@ -402,9 +402,7 @@ static APP_state_t handle_set_am_pm_screen(APP_event_t event)
 {
     APP_state_t ret = SET_AM_PM_SCREEN;
 
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], true);
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], true);
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], true);
+    set_blinking(LEFT_DISP1_IDX, LEFT_DISP3_IDX, true);
 
     switch(event)
     {
@@ -414,9 +412,7 @@ static APP_state_t handle_set_am_pm_screen(APP_event_t event)
             break;
         case DOUBLE_PRESS:
             ret = SET_HOURS_SCREEN;
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            set_blinking(LEFT_DISP1_IDX, LEFT_DISP3_IDX, false);
             tick = STATE_DELAY_1S;
             break;
         default:
@@ -436,21 +432,18 @@ static APP_state_t handle_set_minutes_screen(APP_event_t event)
 {
     APP_state_t ret = SET_MINUTES_SCREEN;
 
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], true);
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], true);
+    set_blinking(LEFT_DISP1_IDX, LEFT_DISP2_IDX, true);
 
     switch(event)
     {
         case MINUS_LONG_PRESS:
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+            set_blinking(LEFT_DISP1_IDX, LEFT_DISP2_IDX, false);
             /* fallthrough */
         case MINUS_RELEASE:
             datetime.min = decrement_over_range(DS1302_MINUTES, datetime.min);
             break;
         case PLUS_LONG_PRESS:
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+            set_blinking(LEFT_DISP1_IDX, LEFT_DISP2_IDX, false);
             /* fallthrough */
         case PLUS_RELEASE:
             datetime.min = increment_over_range(DS1302_MINUTES, datetime.min);
@@ -460,8 +453,7 @@ static APP_state_t handle_set_minutes_screen(APP_event_t event)
             DEBUG(DL_ERROR, "%d:%d:%d\n",datetime.hours, datetime.min, datetime.secs);
             DS1302_set_write_protection(false);
             DS1302_set(&datetime);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP1_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP2_IDX], false);
+            set_blinking(LEFT_DISP1_IDX, LEFT_DISP2_IDX, false);
             tick = STATE_DELAY_1S;
             break;
         default:
