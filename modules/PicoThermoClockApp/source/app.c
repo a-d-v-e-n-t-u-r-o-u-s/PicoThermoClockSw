@@ -356,14 +356,12 @@ static APP_state_t handle_set_hours_screen(APP_event_t event)
 {
     APP_state_t ret = SET_HOURS_SCREEN;
 
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], true);
-    SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], true);
+    set_blinking(LEFT_DISP3_IDX, LEFT_DISP4_IDX, true);
 
     switch(event)
     {
         case MINUS_LONG_PRESS:
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            set_blinking(LEFT_DISP3_IDX, LEFT_DISP4_IDX, false);
             /* fallthrough */
         case MINUS_RELEASE:
             {
@@ -373,8 +371,7 @@ static APP_state_t handle_set_hours_screen(APP_event_t event)
             }
             break;
         case PLUS_LONG_PRESS:
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            set_blinking(LEFT_DISP3_IDX, LEFT_DISP4_IDX, false);
             /* fallthrough */
         case PLUS_RELEASE:
             {
@@ -385,8 +382,7 @@ static APP_state_t handle_set_hours_screen(APP_event_t event)
             break;
         case DOUBLE_PRESS:
             ret = SET_MINUTES_SCREEN;
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP4_IDX], false);
-            SSD_MGR_display_blink(&app_displays[LEFT_DISP3_IDX], false);
+            set_blinking(LEFT_DISP3_IDX, LEFT_DISP4_IDX, false);
             tick = STATE_DELAY_1S;
             break;
         default:
