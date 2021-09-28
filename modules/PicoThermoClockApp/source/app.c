@@ -184,7 +184,7 @@ static uint8_t increment_over_range(uint8_t type, uint8_t value)
 
 static void set_blinking(uint8_t start, uint8_t end, bool value)
 {
-    for(uint8_t i = start; i < end; i++)
+    for(uint8_t i = start; i <= end; i++)
     {
         SSD_MGR_display_blink(&app_displays[i], value);
     }
