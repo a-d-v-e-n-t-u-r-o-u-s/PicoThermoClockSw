@@ -41,7 +41,7 @@
 #include "stat.h"
 #include "common.h"
 
-/* TODO add static assert for checking CHAR_BIT == 8U */
+/* \todo (DB) add static assert for checking CHAR_BIT == 8U */
 
 static SSD_MGR_displays_t displays[4];
 
