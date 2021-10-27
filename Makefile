@@ -65,7 +65,9 @@ MAKEFLAGS:= -I$(CURDIR) -I$(CURDIR)/config -I$(CURDIR)/projects/$(PROJECT) -R
 
 .PHONY: all flash clean $(3RDPARTY_DIR) $(DRIVERS_DIR) $(MODULES_DIR)
 
-all: banner $(BUILD_DIR) executable done
+#TODO cleaning before building is a workaround for lack of dependencies on header files
+# this workaround is going to be fine for small projects
+all: clean banner $(BUILD_DIR) executable done
 
 
 flash:
