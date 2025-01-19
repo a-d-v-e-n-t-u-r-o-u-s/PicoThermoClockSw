@@ -26,8 +26,12 @@ jobs:
       - run:
           name: "Build project"
           command: make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
-      - sonarcloud/scan:
-          extra_args: "-Dsonar.cfamily.compile-commands=compile_commands.json"
+      - run:
+          name: Set SonarCloud analysis properties
+          command: |
+            echo "SONAR_SCANNER_OPTS=-Dsonar.cfamily.compile-commands=compile_commands.json" >> $BASH_ENV
+            source $BASH_ENV
+      - sonarcloud/scan
 
 workflows:
   main:
