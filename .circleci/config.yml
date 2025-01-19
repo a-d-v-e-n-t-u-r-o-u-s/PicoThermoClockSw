@@ -19,10 +19,10 @@ jobs:
       # Checkout the code as the first step.
       - checkout
       - run:
-          name: "Add github to known hosts"
+          name: "Install AVR toolchain"
           command: |
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            sudo apt-get update
+            sudo apt-get install -y gcc-avr avr-libc avrdude
       - run:
           name: "Initialize and update submodules"
           command: git submodule update --init --recursive
