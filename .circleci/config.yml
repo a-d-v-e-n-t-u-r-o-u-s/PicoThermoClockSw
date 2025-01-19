@@ -24,6 +24,9 @@ jobs:
           name: "Generatie compilation database"
           command: bear -- make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
       - run:
+          name: Check compile_commands.json
+          command: ls -l compile_commands.json || echo "compile_commands.json not found"
+      - run:
           name: "Build project"
           command: make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
       - run:
