@@ -40,6 +40,7 @@ jobs:
           command: |
             echo "SONAR_SCANNER_OPTS=-Dsonar.cfamily.compile-commands=$(pwd)/compile_commands.json" >> $BASH_ENV
             source $BASH_ENV
+            echo "Value of SONAR_SCANNER_OPTS: $SONAR_SCANNER_OPTS"
       - run:
           name: Inspect enviromental variables
           command: |
