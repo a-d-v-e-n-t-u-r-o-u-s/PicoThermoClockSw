@@ -13,17 +13,21 @@ jobs:
     steps:
       - checkout  # Checkout project repository
       - run:
-          name: "Install AVR toolchain"
+          name: "Install AVR and Bear"
           command: |
             sudo apt-get update
-            sudo apt-get install -y gcc-avr avr-libc avrdude
+            sudo apt-get install -y gcc-avr avr-libc avrdude bear
       - run:
           name: "Initialize and update submodules"
           command: git submodule update --init --recursive
       - run:
+          name: "Generatie compilation database"
+          command: bear -- make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
+      - run:
           name: "Build project"
           command: make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
-      - sonarcloud/scan  # Perform SonarCloud scan
+      - sonarcloud/scan:
+          extra_args: "-Dsonar.cfamily.compile-commands=compile_commands.json"
 
 workflows:
   main:
