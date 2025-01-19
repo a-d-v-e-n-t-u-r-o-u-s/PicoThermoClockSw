@@ -44,9 +44,7 @@ jobs:
           name: Inspect enviromental variables
           command: |
             echo "Value of SONAR_SCANNER_OPTS: $SONAR_SCANNER_OPTS"
-      - run:
-          name: Run SonarClound analysis with debug
-          command: sonar-scanner -X
+      - sonarcloud/scan
 
 workflows:
   main:
