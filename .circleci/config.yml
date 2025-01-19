@@ -21,19 +21,29 @@ jobs:
           name: "Initialize and update submodules"
           command: git submodule update --init --recursive
       - run:
-          name: "Generatie compilation database"
-          command: bear -- make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
-      - run:
-          name: Check compile_commands.json
-          command: ls -l compile_commands.json || echo "compile_commands.json not found"
-      - run:
           name: "Build project"
           command: make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
       - run:
+          name: "Generate compilation database"
+          command: bear -- make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
+      - run:
+          name: Verify compile_commands.json presence
+          command: ls -l compile_commands.json || echo "compile_commands.json not found"
+      - run:
+          name: Inspect compile_commands.json presence
+          command: cat compile_commands.json || echo "compile_commands.json not found"
+      - run:
+          name: Find compile_commands.json presence
+          command: find . -name "compile_commands.json"
+      - run:
           name: Set SonarCloud analysis properties
           command: |
-            echo "SONAR_SCANNER_OPTS=-Dsonar.cfamily.compile-commands=compile_commands.json" >> $BASH_ENV
+            echo "SONAR_SCANNER_OPTS=-Dsonar.cfamily.compile-commands=$(pwd)/compile_commands.json" >> $BASH_ENV
             source $BASH_ENV
+      - run:
+          name: Inspect enviromental variables
+          command: |
+            echo $BASH_ENV
       - sonarcloud/scan
 
 workflows:
