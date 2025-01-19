@@ -3,7 +3,7 @@
 	url = https://github.com/a-d-v-e-n-t-u-r-o-u-s/gpio.git
 [submodule "drivers/usart"]
 	path = drivers/usart
-	url = https://ithub.com/a-d-v-e-n-t-u-r-o-u-s/usart.git
+	url = https://github.com/a-d-v-e-n-t-u-r-o-u-s/usart.git
 [submodule "modules/Debug"]
 	path = modules/Debug
 	url = https://github.com/a-d-v-e-n-t-u-r-o-u-s/debug.git
