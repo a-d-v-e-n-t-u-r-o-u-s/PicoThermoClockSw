@@ -37,7 +37,9 @@ jobs:
           command: find . -name "compile_commands.json"
       - run:
           name: Enable verbose logging
-          command: echo 'SONAR_SCANNER_OPTS="-Dsonar.verbose=true -X"' >> $BASH_ENV
+          command: |
+            echo 'SONAR_SCANNER_OPTS="-Dsonar.verbose=true -X"' >> $BASH_ENV
+            echo 'export SONAR_SCANNER_DEBUG=true' >> $BASH_ENV
       - run:
           name: Inspect enviromental variables
           command: |
