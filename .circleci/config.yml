@@ -39,7 +39,11 @@ jobs:
           name: Inspect enviromental variables
           command: |
             echo "Value of SONAR_SCANNER_OPTS: $SONAR_SCANNER_OPTS"
-      - sonarcloud/scan
+      - run:
+          name: Force SonarCloud project settings
+          command: |
+            export SONAR_SCANNER_OPTS="-Dsonar-projectBaseDir=$(pwd)"
+            sonar-scanner -Dproject.settings=sonar-project.properties -X
 
 workflows:
   main:
