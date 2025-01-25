@@ -40,10 +40,10 @@ jobs:
           command: |
             echo "Value of SONAR_SCANNER_OPTS: $SONAR_SCANNER_OPTS"
       - run:
-          name: Force SonarCloud project settings
+          name: Verify sonar-project.properties
           command: |
-            export SONAR_SCANNER_OPTS="-Dsonar-projectBaseDir=$(pwd)"
-            sonar-scanner -Dproject.settings=sonar-project.properties -X
+            cat sonar-project.properties
+      - sonarcloud/scan
 
 workflows:
   main:
