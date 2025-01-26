@@ -434,6 +434,7 @@ static APP_state_t handle_set_minutes_screen(APP_event_t event)
     {
         case MINUS_LONG_PRESS:
             set_blinking(LEFT_DISP1_IDX, LEFT_DISP2_IDX, false);
+            /* fallthrough */
         case MINUS_RELEASE:
             datetime.min = decrement_over_range(DS1302_MINUTES, datetime.min);
             break;
