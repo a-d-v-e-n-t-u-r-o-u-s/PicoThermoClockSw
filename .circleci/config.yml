@@ -27,25 +27,25 @@ jobs:
           name: "Generate compilation database"
           command: bear -- make -s PROJECT=PicoThermoClockApp TARGET=avr COMPILER=gcc MCU=atmega8 PCB=1
       - run:
-          name: Verify compile_commands.json presence
+          name: "Verify compile_commands.json presence"
           command: ls -l compile_commands.json || echo "compile_commands.json not found"
       - run:
-          name: Inspect compile_commands.json presence
+          name: "Inspect compile_commands.json presence"
           command: cat compile_commands.json || echo "compile_commands.json not found"
       - run:
-          name: Find compile_commands.json presence
+          name: "Find compile_commands.json presence"
           command: find . -name "compile_commands.json"
       - run:
-          name: Enable verbose logging
+          name: "Enable verbose logging"
           command: |
             echo 'SONAR_SCANNER_OPTS="-Dsonar.verbose=true -X"' >> $BASH_ENV
             echo 'export SONAR_SCANNER_DEBUG=true' >> $BASH_ENV
       - run:
-          name: Inspect enviromental variables
+          name: "Inspect enviromental variables"
           command: |
             echo "Value of SONAR_SCANNER_OPTS: $SONAR_SCANNER_OPTS"
       - run:
-          name: Verify sonar-project.properties
+          name: "Verify sonar-project.properties"
           command: |
             cat sonar-project.properties
       - sonarcloud/scan
