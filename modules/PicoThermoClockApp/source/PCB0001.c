@@ -23,7 +23,6 @@
 
 #include "PCB0001.h"
 
-// sonarcloud-disable S103
 const GPIO_config_t gpio_config[18] PROGMEM =
 {
     [GPIO_CHANNEL_COLON] =          { .port = GPIO_PORTB, .pin = 0U, .mode = GPIO_OUTPUT_PUSH_PULL, .init_value = false },
@@ -45,7 +44,6 @@ const GPIO_config_t gpio_config[18] PROGMEM =
     [GPIO_CHANNEL_RTC_IO]       =   { .port = GPIO_PORTD, .pin = 6U, .mode = GPIO_OUTPUT_PUSH_PULL, .init_value = false },
     [GPIO_CHANNEL_RTC_CE]       =   { .port = GPIO_PORTD, .pin = 7U, .mode = GPIO_OUTPUT_PUSH_PULL, .init_value = false },
 };
-// sonarcloud-enable S103
 
 const SSD_MGR_config_t ssd_config PROGMEM =
 {

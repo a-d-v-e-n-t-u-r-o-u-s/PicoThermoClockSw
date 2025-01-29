@@ -16,7 +16,9 @@ CFLAGS = -c
 CFLAGS += -Wall
 CFLAGS += -Werror
 CFLAGS += -Wundef
-#CFLAGS += -Wpedantic
+CFLAGS += -Wpedantic
+#CFLAGS += -Wconversion
+#CFLAGS += -Wsign-conversion
 CFLAGS += -fdata-sections
 CFLAGS += -ffunction-sections
 CFLAGS += -mmcu=$(MCU)

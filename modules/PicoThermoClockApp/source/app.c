@@ -62,6 +62,17 @@
 #define MIN_TEMPERATURE             (-200)
 #define MAX_TEMPERATURE             (200)
 
+#define DECIMAL_BASE                (10U)
+#define POSITION_UNITS              (0U)
+#define POSITION_TENS               (1U)
+#define POSITION_HUNDREDS           (2U)
+#define POSITION_THOUSANDS          (3U)
+
+#define HH_MULTIPLIER               (100U)
+
+#define TIME_SCREEN_SWITCH_TIMEOUT  (20U)
+#define TEMP_SCREEN_SWITCH_TIMEOUT  (5U)
+
 typedef enum
 {
     IDLE,
@@ -126,19 +137,19 @@ static inline bool is_temperature_in_range(int16_t temperature, uint8_t scaling_
 
 static uint8_t get_digit(uint16_t value, uint8_t position)
 {
-     switch(position)
-     {
-        case 0:
-             return value%10u;
-        case 1:
-             return (value/10u)%10u;
-        case 2:
-             return (value/100u)%10u;
-        case 3:
-             return (value/1000u)%10u;
+    switch(position)
+    {
+        case POSITION_UNITS:
+            return value % DECIMAL_BASE;
+        case POSITION_TENS:
+            return (value / DECIMAL_BASE) % DECIMAL_BASE;
+        case POSITION_HUNDREDS:
+            return (value / (DECIMAL_BASE * DECIMAL_BASE)) % DECIMAL_BASE;
+        case POSITION_THOUSANDS:
+            return (value / (DECIMAL_BASE * DECIMAL_BASE * DECIMAL_BASE)) % DECIMAL_BASE;
         default:
-             return 0u;
-     }
+            return 0u;
+    }
 }
 
 static void set_input_to_defaults(INPUT_MGR_event_t *event)
@@ -456,7 +467,7 @@ static APP_state_t handle_set_minutes_screen(APP_event_t event)
             break;
     }
 
-    uint16_t const to_display = datetime.hours*100U + datetime.min;
+    uint16_t const to_display = (datetime.hours*100U) + datetime.min;
     set_to_display(to_display);
     return ret;
 }
@@ -479,12 +490,12 @@ static APP_state_t handle_time_screen(APP_event_t event)
     uint8_t mm = DS1302_get_minutes();
     uint8_t hh = DS1302_get_hours(datetime.is_12h_mode);
 
-    set_to_display(hh*100 + mm);
+    set_to_display((hh*HH_MULTIPLIER) + mm);
     tick = STATE_DELAY_1S;
     GPIO_toggle_pin(GPIO_CHANNEL_COLON);
     timer5s++;
 
-    if(timer5s > 20U)
+    if(timer5s > TIME_SCREEN_SWITCH_TIMEOUT)
     {
         timer5s = 0u;
         tick = STATE_DELAY_1S;
@@ -540,11 +551,11 @@ static APP_state_t handle_temp_screen(APP_event_t event)
             -temperature_renormalized : temperature_renormalized;
 
         SSD_MGR_display_set(&app_displays[LEFT_DISP1_IDX], is_fahrenheit ? SSD_CHAR_F: SSD_CHAR_C);
-        uint8_t digit = get_digit(temp_abs, 0);
+        uint8_t digit = get_digit(temp_abs, POSITION_UNITS);
         SSD_MGR_display_set(&app_displays[LEFT_DISP2_IDX], digit);
-        digit = get_digit(temp_abs, 1);
+        digit = get_digit(temp_abs, POSITION_TENS);
         SSD_MGR_display_set(&app_displays[LEFT_DISP3_IDX], digit);
-        digit = get_digit(temp_abs, 2);
+        digit = get_digit(temp_abs, POSITION_HUNDREDS);
         SSD_MGR_display_set(&app_displays[LEFT_DISP4_IDX], digit);
 
         if(is_negative)
@@ -564,7 +575,7 @@ static APP_state_t handle_temp_screen(APP_event_t event)
     tick = STATE_DELAY_1S;
     timer5s++;
 
-    if(timer5s > 5U)
+    if(timer5s > TEMP_SCREEN_SWITCH_TIMEOUT)
     {
         timer5s = 0;
         tick = STATE_DELAY_1S;
@@ -618,7 +629,6 @@ static void app_main(void)
             break;
         default:
             ASSERT(false);
-            break;
     }
 }
 
